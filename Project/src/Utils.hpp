@@ -11,6 +11,6 @@ namespace Polygons {
 bool importdfn(const string& filename, Fractures& fractures); //funzione che apre e legge il file in input
 }
 
-// namespace Analytics {
-// Vector4d calcSphere(const vector<Vector3d>& vertex_data); //funzione che calcola le sfere
-// }
+namespace Analytics {
+Vector3d trovaBaricentro(const vector<Vector3d>& vertices_data); //funzione che calcola le sfere
+}

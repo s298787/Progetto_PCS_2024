@@ -40,10 +40,16 @@ bool importdfn(const string& filename, Fractures& fractures)
         string token;
 
         // Legge il FractureId e il NumVertices
+        unsigned int fractureId;
         getline(iss, token, ';');
-        unsigned int fractureId = stoi(token);
+        ss << token;
+        ss >> fractureId;
+        ss.clear();
+        unsigned int numVertices;
         getline(iss, token);
-        unsigned int numVertices = stoi(token);
+        ss << token;
+        ss >> numVertices;
+        ss.clear();
 
         // Popola FracturesId
         fractures.FracturesId.push_back(fractureId);
@@ -60,10 +66,14 @@ bool importdfn(const string& filename, Fractures& fractures)
             for (unsigned int k = 0; k < numVertices - 1; ++k)
             {
                 getline(vertex_iss, token, ';');
-                vertex_data[k](i) = stod(token);
+                ss << token;
+                ss >> vertex_data[k](i);
+                ss.clear();
             }
             getline(vertex_iss, token);
-            vertex_data[numVertices - 1](i) = stod(token);
+            ss << token;
+            ss >> vertex_data[numVertices - 1](i);
+            ss.clear();
         }
 
         fractures.CoordVertices.push_back(vertex_data);
@@ -79,5 +89,21 @@ bool importdfn(const string& filename, Fractures& fractures)
         }
     }
     return true;
+}
+}
+
+namespace Analytics {
+Vector3d trovaBaricentro(const vector<Vector3d>& vertices_data)
+{
+    Vector3d baricentro{0.0,0.0,0.0};
+
+    for (size_t k = 0; k < vertices_data.size(); ++k)
+    {
+        baricentro += vertices_data[k];
+
+    }
+
+    baricentro /= vertices_data.size();
+    return baricentro;
 }
 }
