@@ -3,6 +3,7 @@
 #include "Traces.hpp"
 #include <Eigen/Eigen>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 using namespace Eigen;
@@ -15,6 +16,22 @@ int main()
     if(importdfn(filename, dfn))
     {
         cout << "File read" << endl;
+    }
+    if(dfn.CoordVertices.empty())
+    {
+        cout << "dfn è vuoto" << endl;
+    }
+    for (vector<Vector3d> matrix : dfn.CoordVertices)
+    {
+        for (Vector3d coord : matrix)
+        {
+            for(unsigned int i = 0; i<3; ++i)
+            {
+                cout << coord(i) << ";";
+            }
+            cout << endl;
+        }
+        cout << endl;
     }
     return 0;
 }
