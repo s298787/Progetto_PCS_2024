@@ -8,5 +8,5 @@ using namespace std;
 using namespace Eigen;
 
 namespace Polygons {
-bool importdfn(const string& filename, Fractures& dfn); //funzione che apre e legge il file in input
+bool importdfn(const string& filename, Fractures& fractures); //funzione che apre e legge il file in input
 }
