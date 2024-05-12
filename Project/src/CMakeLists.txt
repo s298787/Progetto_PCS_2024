@@ -1,6 +1,9 @@
 list(APPEND DFN_headers ${CMAKE_CURRENT_SOURCE_DIR}/Utils.hpp)
 list(APPEND DFN_sources ${CMAKE_CURRENT_SOURCE_DIR}/Utils.cpp)
 
+list(APPEND DFN_headers ${CMAKE_CURRENT_SOURCE_DIR}/Fractures.hpp)
+list(APPEND DFN_headers ${CMAKE_CURRENT_SOURCE_DIR}/Traces.hpp)
+
 list(APPEND DFN_includes ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(DFN_sources ${DFN_sources} PARENT_SCOPE)
