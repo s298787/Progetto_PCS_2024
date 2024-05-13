@@ -20,15 +20,14 @@ bool importdfn(const string& filename, Fractures& fractures)
     }
 
     string header;
-    string numberfractures;
+    string line;
     stringstream ss;
     getline(file, header);
-    getline(file, numberfractures);
-    ss << numberfractures;
+    getline(file, line); //Leggiamo il numero di fratture nel file
+    ss << line;
     ss >> fractures.FracturesNumber;
     ss.clear();
 
-    string line;
     while (getline(file, line))
     {
         if (line.empty() || line[0] == '#')
@@ -56,29 +55,30 @@ bool importdfn(const string& filename, Fractures& fractures)
 
         getline(file, line);
 
-        // Popola CoordVertices
+        // Legge le informazioni sui vertici:
         vector<Vector3d> vertex_data;
         vertex_data.resize(numVertices);
-        for (unsigned int i = 0; i < 3; ++i)
+        for (unsigned int i = 0; i < 3; ++i) // Legge per 3 volte la righe con le coordinate
         {
             getline(file, line);
             istringstream vertex_iss(line);
             for (unsigned int k = 0; k < numVertices - 1; ++k)
             {
-                getline(vertex_iss, token, ';');
+                getline(vertex_iss, token, ';'); // Separa le singole coordinate
                 ss << token;
-                ss >> vertex_data[k](i);
+                ss >> vertex_data[k](i); // Iscatola le coordinate iterando sulle righe di vertex_data
                 ss.clear();
             }
-            getline(vertex_iss, token);
+            getline(vertex_iss, token); // Legge l'ultima coordinata che ha separatore \n
             ss << token;
             ss >> vertex_data[numVertices - 1](i);
             ss.clear();
         }
 
+        // Popola CordVertices
         fractures.CoordVertices.push_back(vertex_data);
 
-        // Aggiorniamo la mappa NumVertices
+        // Aggiorna la mappa NumVertices
         if(fractures.NumVertices.find(numVertices) == fractures.NumVertices.end())
         {
             fractures.NumVertices.insert({numVertices, {fractureId}});
@@ -87,23 +87,73 @@ bool importdfn(const string& filename, Fractures& fractures)
         {
             fractures.NumVertices[numVertices].push_back(fractureId);
         }
+
+        // Popola Spheres
+        fractures.Spheres.push_back(Analytics::calcsphere(vertex_data));
+        // Popola Normals
+        // Calcola e normalizza il prodotto scalare tra i vettori che congiungono i primi tre vertici
+        fractures.Normals.push_back(Analytics::normal(vertex_data));
     }
     return true;
 }
 }
 
 namespace Analytics {
-Vector3d trovaBaricentro(const vector<Vector3d>& vertices_data)
+Vector4d calcsphere(const vector<Vector3d>& vertex_data)
 {
+    Vector4d sphere;
     Vector3d baricentro{0.0,0.0,0.0};
 
-    for (size_t k = 0; k < vertices_data.size(); ++k)
+    // Calcola il baricentro come media delle posizioni dei vertici
+    for (size_t k = 0; k < vertex_data.size(); ++k)
     {
-        baricentro += vertices_data[k];
-
+        baricentro += vertex_data[k];
+    }
+    baricentro /= vertex_data.size();
+    // Copia il baricentro nelle prime tre posizioni di sphere
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        sphere(i) = baricentro(i);
     }
 
-    baricentro /= vertices_data.size();
-    return baricentro;
+    // Salva al fondo di sphere il raggio (tutti i vertici hanno la stessa distanza dal baricentro)
+    sphere(3) = distance(baricentro, vertex_data[0]);
+    return sphere;
+}
+double distance(const Vector3d& point1, const Vector3d& point2)
+{
+    return (point1-point2).norm();
+}
+Vector3d normal(const vector<Vector3d>& vertex_data)
+{
+    Vector3d n = (vertex_data[1] - vertex_data[0]).cross(vertex_data[2]-vertex_data[0]);
+    n.normalize();
+    return n;
 }
 }
+
+// namespace SortLibrary {
+// template<typename T>
+// void BubbleSort(vector<T>& data)
+// {
+//     size_t rem_size = data.size();
+//     size_t last_seen = rem_size;
+//     bool swapped = true;
+
+//     while (swapped)
+//     {
+//         swapped = false;
+//         for (size_t i = 1; i < rem_size; i++)
+//         {
+//             if (data[i-1] < data[i]) //ordina dal maggiore al minore
+//             {
+//                 swap(data[i-1], data[i]);
+//                 swapped = true;
+//                 last_seen = i;
+//             }
+//         }
+//         //        rem_size = rem_size - 1;
+//         rem_size = last_seen;
+//     }
+// }
+// }
