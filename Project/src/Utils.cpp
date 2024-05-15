@@ -117,6 +117,68 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
     }
     return goodcouples;
 }
+void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& goodcouples, Traces& traces, const double& epsilon)
+{
+    Vector3d limit = {1e10,1e10,1e10};
+    for(vector<unsigned int> couple : goodcouples)
+    {
+        unsigned int id1 = couple[0];
+        unsigned int id2 = couple[1];
+        Vector3d n1 = fractures.Normals[id1];
+        Vector3d n2 = fractures.Normals[id2];
+        Vector3d tangent = n1.cross(n2);
+        if (tangent.norm() > epsilon) // Controlla che i piani non siano paralleli
+        {
+            double d1 = n1.dot(fractures.CoordVertices[id1][0]);
+            double d2 = n2.dot(fractures.CoordVertices[id2][0]);
+            double det = n1[0]*n2[1]-n1[1]*n2[0];
+            double detx = -d1 * n2[1] + d2 * n1[0];
+            double dety = -d1 * n2[1]+ d2 * n1[0];
+            double detz = -d1 * n2[2] + d2 * n1[2];
+            Vector3d point(detx/det, dety/det, detz/det);
+            vector<Vector3d> intersections;
+            Vector3d inter;
+            for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i)
+            {
+                inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i]);
+                if (inter != limit)
+                {
+                    intersections.push_back(inter);
+                }
+                // cout << inter(0) << ";" << inter(1) << ";" << inter(2) <<endl;
+            }
+            inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], fractures.CoordVertices[id1][0] - fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1]);
+            if (inter != limit)
+            {
+                intersections.push_back(inter);
+            }
+            for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i)
+            {
+                inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id2][i], fractures.CoordVertices[id2][i+1] - fractures.CoordVertices[id2][i]);
+                if (inter != limit)
+                {
+                    intersections.push_back(inter);
+                }
+            }
+            inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], fractures.CoordVertices[id2][0] - fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1]);
+            if (inter != limit)
+            {
+                intersections.push_back(inter);
+            }
+            cout << intersections.size() << endl;
+            cout << id1 << "&" << id2 << ": ";
+            for (Vector3d v : intersections)
+            {
+                for (unsigned int i = 0; i < v.size(); ++i)
+                {
+                    cout << v(i) << ";";
+                }
+                cout << "   ";
+            }
+            cout << endl;
+        }
+    }
+}
 }
 
 namespace Analytics {
@@ -150,6 +212,28 @@ Vector3d normal(const vector<Vector3d>& vertex_data)
     Vector3d n = (vertex_data[1] - vertex_data[0]).cross(vertex_data[2]-vertex_data[0]);
     n.normalize();
     return n;
+}
+Vector3d intersectrettaretta(const Vector3d& point, const Vector3d& dir,
+                             const Vector3d& point1, const Vector3d& dir1)
+{
+    Vector3d intersec = {1e10,1e10,1e10};
+
+    Vector3d cross_product = dir.cross(dir1);
+    double cross_product_norm = cross_product.norm();
+    Vector3d diff = point1 - point;
+
+    // double t = (diff.cross(dir1)).dot(cross_product) / cross_product_norm;
+    // double s = (diff.cross(dir)).dot(cross_product) / cross_product_norm;
+    double s = (-diff(1)/dir1(1) + diff(0)*dir(1)/(dir1(1)*dir(0)))/(1-dir(1)*dir1(0)/(dir1(1)*dir(0)));
+    double t = dir1(0)*s/dir(0) + diff(0)/dir(0);
+    // if (-diff(2) == -dir(2)*t + dir1(2)*s)
+    // {
+        if (s >= 0.0 && s <= 1.0)
+        {
+            intersec = point + t * dir;
+        }
+    // }
+    return intersec;
 }
 }
 

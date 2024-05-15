@@ -14,7 +14,8 @@ using namespace Analytics;
 int main()
 {
     Fractures dfn;
-    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR82_data.txt";
+    Traces traces;
+    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR3_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File read" << endl;
@@ -60,12 +61,13 @@ int main()
     //     cout << endl;
     // }
 
-    double epsilon = numeric_limits<double>::epsilon();
-    list<vector<unsigned int>> goodcouples = checkconditions(dfn, epsilon);
+    double epsilon = 10*numeric_limits<double>::epsilon();
+    list<vector<unsigned int>> goodcouples = checkspheres(dfn);
     // for (vector<unsigned int> couple : goodcouples)
     // {
     //     cout << couple[0] << ";" << couple [1] << endl;
     // }
-    cout << goodcouples.size() << endl;
+    // cout << goodcouples.size() << endl;
+    tracesfinder(dfn, goodcouples, traces, epsilon);
     return 0;
 }
