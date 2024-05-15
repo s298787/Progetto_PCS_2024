@@ -14,7 +14,8 @@ namespace Polygons {
 bool importdfn(const string& filename, Fractures& fractures)
 {
     ifstream file(filename);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         cerr << "Errore nell'apertura del file" << endl;
         return false;
     }
@@ -95,6 +96,26 @@ bool importdfn(const string& filename, Fractures& fractures)
         fractures.Normals.push_back(Analytics::normal(vertex_data));
     }
     return true;
+}
+list<vector<unsigned int>> checkspheres(const Fractures& fractures)
+{
+    list<vector<unsigned int>> goodcouples;
+    for (unsigned int id1 = 0; id1 < fractures.FracturesNumber - 1; ++id1)
+    {
+        for (unsigned int id2 = id1 + 1; id2 < fractures.FracturesNumber; ++id2)
+        {
+            Vector3d point1(fractures.Spheres[id1](0), fractures.Spheres[id1](1), fractures.Spheres[id1](2));
+            Vector3d point2(fractures.Spheres[id2](0), fractures.Spheres[id2](1), fractures.Spheres[id2](2));
+            double r1 = fractures.Spheres[id1](3);
+            double r2 = fractures.Spheres[id2](3);
+            if(Analytics::distance(point1, point2) < r1+r2)
+            {
+                vector<unsigned int> ids = {id1, id2};
+                goodcouples.push_back(ids);
+            }
+        }
+    }
+    return goodcouples;
 }
 }
 

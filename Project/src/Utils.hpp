@@ -9,6 +9,7 @@ using namespace Eigen;
 
 namespace Polygons {
 bool importdfn(const string& filename, Fractures& fractures); //funzione che apre e legge il file in input
+list<vector<unsigned int>> checkspheres(const Fractures& fractures); //funzione che screma le fratture in base alla distanza reciproca
 }
 
 namespace Analytics {
