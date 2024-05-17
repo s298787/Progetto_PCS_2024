@@ -6,6 +6,7 @@
 #include <vector>
 #include <Eigen/Eigen>
 #include <algorithm>
+#include <bits/stdc++.h>
 
 using namespace std;
 using namespace Eigen;
@@ -119,51 +120,143 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
 }
 void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& goodcouples, Traces& traces, const double& epsilon)
 {
-    Vector3d limit = {1e10,1e10,1e10};
+    Vector3d limit(100,100,100);
     for(vector<unsigned int> couple : goodcouples)
     {
         unsigned int id1 = couple[0];
         unsigned int id2 = couple[1];
         Vector3d n1 = fractures.Normals[id1];
         Vector3d n2 = fractures.Normals[id2];
-        Vector3d tangent = n1.cross(n2);
+        Vector3d tangent = n1.cross(n2); // Vettore direzione della retta di intersezione
         if (tangent.norm() > epsilon) // Controlla che i piani non siano paralleli
         {
+            // Calcola i termini noti del piano
             double d1 = n1.dot(fractures.CoordVertices[id1][0]);
             double d2 = n2.dot(fractures.CoordVertices[id2][0]);
-            double det = n1[0]*n2[1]-n1[1]*n2[0];
-            double detx = -d1 * n2[1] + d2 * n1[0];
-            double dety = -d1 * n2[1]+ d2 * n1[0];
-            double detz = -d1 * n2[2] + d2 * n1[2];
-            Vector3d point(detx/det, dety/det, detz/det);
+
+            Matrix<double, 2, 3> A; // Matrice delle normali
+            A.row(0) = n1.transpose();
+            A.row(1) = n2.transpose();
+
+            Vector2d b(d1,d2); // Vettore dei termini noti
+
+            // Risolve il sistema di equazioni lineari per trovare un punto sulla retta di intersezione
+            Vector3d point = A.fullPivLu().solve(b);
+
             vector<Vector3d> intersections;
             Vector3d inter;
             for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i)
             {
+                // Cerca l'intersezione tra la retta tangent ed il segmento
                 inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i]);
                 if (inter != limit)
                 {
-                    intersections.push_back(inter);
+                    // Verifica se inter è interno al poligono id2
+                    vector<int> checksigns;
+                    for (size_t j = 0; j < fractures.CoordVertices[id2].size()-1;++j)
+                    {
+
+                        Vector3d u = fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j];
+                        Vector3d v = -(fractures.CoordVertices[id2][j]-inter);
+                        double uv = u.dot(v)/(u.norm()*v.norm());
+                        int alpha = Analytics::sign(sin(acos(uv)));
+                        // cout << alpha << " ";
+                        checksigns.push_back(alpha);
+                    }
+
+                    Vector3d l = -(fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1]-inter);
+                    Vector3d m = fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1];
+                    double lm = l.dot(m)/(l.norm()*m.norm());
+                    int alpha1 = Analytics::sign(sin(acos(lm)));
+                    // cout << alpha1 << " " << endl;
+                    checksigns.push_back(alpha1);
+                    if(Analytics::positive(checksigns))
+                    {
+                        intersections.push_back(inter);
+                    }
                 }
-                // cout << inter(0) << ";" << inter(1) << ";" << inter(2) <<endl;
             }
             inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], fractures.CoordVertices[id1][0] - fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1]);
             if (inter != limit)
             {
-                intersections.push_back(inter);
+                vector<int> checksigns;
+                for (size_t j = 0; j < fractures.CoordVertices[id2].size()-1;++j)
+                {
+
+                    Vector3d u = fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j];
+                    Vector3d v = -(fractures.CoordVertices[id2][j]-inter);
+                    double uv ;
+                    uv = u.dot(v)/(u.norm()*v.norm());
+                    int alpha = Analytics::sign(sin(acos(uv)));
+                    // cout << alpha << " ";
+                    checksigns.push_back(alpha);
+                }
+                Vector3d l = -(fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1]-inter);
+                Vector3d m = fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1];
+                double lm = l.dot(m)/(l.norm()*m.norm());
+                int alpha1 = Analytics::sign(sin(acos(lm)));
+                // cout << alpha1 << " ";
+                checksigns.push_back(alpha1);
+                if(Analytics::positive(checksigns))
+                {
+                    intersections.push_back(inter);
+                }
             }
             for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i)
             {
                 inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id2][i], fractures.CoordVertices[id2][i+1] - fractures.CoordVertices[id2][i]);
                 if (inter != limit)
                 {
-                    intersections.push_back(inter);
+                    vector<int> checksigns;
+                    for (size_t j = 0; j < fractures.CoordVertices[id1].size()-1;++j)
+                    {
+
+                        Vector3d u = fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j];
+                        Vector3d v = -(fractures.CoordVertices[id1][j]-inter);
+                        double uv ;
+                        uv = u.dot(v)/(u.norm()*v.norm());
+                        int alpha = Analytics::sign(sin(acos(uv)));
+                        // cout <<alpha << " ";
+                        checksigns.push_back(alpha);
+                    }
+                    Vector3d l = -(fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1]-inter);
+                    Vector3d m = fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1];
+                    double lm = l.dot(m)/(l.norm()*m.norm());
+                    int alpha1 = Analytics::sign(sin(acos(lm)));
+                    // cout << alpha1 << " ";
+                    checksigns.push_back(alpha1);
+
+                    if(Analytics::positive(checksigns))
+                    {
+                        intersections.push_back(inter);
+                    }
                 }
             }
             inter = Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], fractures.CoordVertices[id2][0] - fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1]);
             if (inter != limit)
             {
-                intersections.push_back(inter);
+                vector<int> checksigns;
+                for (size_t j = 0; j < fractures.CoordVertices[id1].size()-1;++j)
+                {
+
+                    Vector3d u = fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j];
+                    Vector3d v = -(fractures.CoordVertices[id1][j]-inter);
+                    double uv ;
+                    uv = u.dot(v)/(u.norm()*v.norm());
+                    int alpha = Analytics::sign(sin(acos(uv)));
+                    // cout << alpha << " ";
+                    checksigns.push_back(alpha);
+                }
+                Vector3d l = -(fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1]-inter);
+                Vector3d m = fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1];
+                double lm = l.dot(m)/(l.norm()*m.norm());
+                int alpha1 = Analytics::sign(sin(acos(lm)));
+                // cout << alpha1 << " ";
+                checksigns.push_back(alpha1);
+                if(Analytics::positive(checksigns))
+                {
+                    intersections.push_back(inter);
+                }
             }
             cout << intersections.size() << endl;
             cout << id1 << "&" << id2 << ": ";
@@ -213,30 +306,67 @@ Vector3d normal(const vector<Vector3d>& vertex_data)
     n.normalize();
     return n;
 }
+
 Vector3d intersectrettaretta(const Vector3d& point, const Vector3d& dir,
                              const Vector3d& point1, const Vector3d& dir1)
 {
-    Vector3d intersec = {1e10,1e10,1e10};
+    Vector3d intersec; //= {1e10,1e10,1e10};
 
     Vector3d cross_product = dir.cross(dir1);
     double cross_product_norm = cross_product.norm();
     Vector3d diff = point1 - point;
+    // cout << diff.transpose()<<endl;
 
-    // double t = (diff.cross(dir1)).dot(cross_product) / cross_product_norm;
-    // double s = (diff.cross(dir)).dot(cross_product) / cross_product_norm;
-    double s = (-diff(1)/dir1(1) + diff(0)*dir(1)/(dir1(1)*dir(0)))/(1-dir(1)*dir1(0)/(dir1(1)*dir(0)));
-    double t = dir1(0)*s/dir(0) + diff(0)/dir(0);
-    // if (-diff(2) == -dir(2)*t + dir1(2)*s)
-    // {
+    double t = (diff.cross(dir1)).dot(cross_product)/ pow(cross_product_norm,2);
+    double s = (diff.cross(dir)).dot(cross_product) / pow(cross_product_norm,2);
+
+    // double s = (-diff(1)/dir1(1) + diff(0)*dir(1)/(dir1(1)*dir(0)))/(1-dir(1)*dir1(0)/(dir1(1)*dir(0)));
+    // double t = dir1(0)*s/dir(0) + diff(0)/dir(0);
+    // cout << dir(0) << " ";
+    Vector3d pointOnL1 = point + t * dir;
+    Vector3d pointOnL2 = point1 + s * dir1;
+    // cout << (pointOnL1 - pointOnL2).norm() << endl;
+    if ((pointOnL1 - pointOnL2).norm() < 1e-10)
+    {
         if (s >= 0.0 && s <= 1.0)
         {
-            intersec = point + t * dir;
+            intersec = pointOnL1;
         }
-    // }
+    }
+    else
+    {
+        intersec = {1e10,1e10,1e10};
+    }
     return intersec;
-}
-}
 
+}
+int sign(double x)
+{
+    if (x > 0)
+    {
+        return 1;  // Positive
+    }
+    else if (x < 0)
+    {
+        return -1; // Negative
+    }
+    else
+    {
+        return 0;  // Zero
+    }
+}
+bool positive(vector<int> checksigns)
+{
+    for (int s : checksigns)
+    {
+        if (s == -1)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+}
 // namespace SortLibrary {
 // template<typename T>
 // void BubbleSort(vector<T>& data)

@@ -21,10 +21,10 @@ int main()
         cout << "File read" << endl;
     }
 
-    if(dfn.CoordVertices.empty())
-    {
-        cout << "dfn è vuoto" << endl;
-    }
+    // if(dfn.CoordVertices.empty())
+    // {
+    //     cout << "dfn è vuoto" << endl;
+    // }
     // for (vector<Vector3d> matrix : dfn.CoordVertices)
     // {
     //     for (Vector3d coord : matrix)
@@ -38,10 +38,10 @@ int main()
     //     cout << endl;
     // }
 
-    if(dfn.NumVertices.empty())
-    {
-        cout << "La mappa NumVertices è vuota" << endl;
-    }
+    // if(dfn.NumVertices.empty())
+    // {
+    //     cout << "La mappa NumVertices è vuota" << endl;
+    // }
 
     // for (Vector4d sp : dfn.Spheres)
     // {
@@ -69,5 +69,12 @@ int main()
     // }
     // cout << goodcouples.size() << endl;
     tracesfinder(dfn, goodcouples, traces, epsilon);
+
+    // Vector3d point(0,0,0);
+    // Vector3d dir(1,1,0);
+    // Vector3d point1(0,1,0);
+    // Vector3d dir1(1,0,0);
+    // Vector3d inter = intersectrettaretta(point,dir,point1,dir1);
+    // cout << inter(0) << ";" << inter(1) << ";" << inter(2) << endl;
     return 0;
 }
