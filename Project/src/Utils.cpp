@@ -208,15 +208,82 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                     intersections.push_back(inter);
                 }
             }
-
-            cout << id1 << "&" << id2 << ": ";
-            for (Vector3d v : intersections) {
-                for (unsigned int i = 0; i < v.size(); ++i) {
-                    cout << v(i) << ";";
+            // Elimina gli elementi ripetuti da intersections
+            for (size_t i = 0; i < intersections.size(); ++i) {
+                for (size_t j = i + 1; j < intersections.size(); ++j) {
+                    if ((intersections[i] - intersections[j]).norm() < 1e-10) {
+                        intersections.erase(intersections.begin()+j);
+                    }
                 }
-                cout << "   ";
             }
-            cout << endl;
+            if (intersections.size() == 2) {
+                // Popola TracesExtremesCoord
+                traces.TracesExtremesCoord.push_back(intersections);
+                // Popola TracesFracturesId
+                traces.TracesFracturesId.push_back({id1, id2});
+                // Popola TracesId
+                unsigned int traceid = traces.TracesExtremesCoord.size() - 1;
+                traces.TracesId.push_back(traceid);
+                // Controlla se la traccia è passante per il poligono 1
+                unsigned int count = 0;
+                // Controlla tutti i lati di id1 per il primo estremo della traccia
+                for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
+                    if (distance(intersections[0], fractures.CoordVertices[id1][i]) + distance(intersections[0], fractures.CoordVertices[id1][i+1])
+                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i]) <= 1e-6) {
+                        count++;
+                    }
+                }
+                if (distance(intersections[0], fractures.CoordVertices[id1][0]) + distance(intersections[0], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
+                    - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    count++;
+                }
+                // Controlla tutti i lati di id1 per il primo estremo della traccia
+                for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
+                    if (distance(intersections[1], fractures.CoordVertices[id1][i]) + distance(intersections[1], fractures.CoordVertices[id1][i+1])
+                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i]) <= 1e-6) {
+                        count++;
+                    }
+                }
+                if (distance(intersections[1], fractures.CoordVertices[id1][0]) + distance(intersections[1], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
+                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    count++;
+                }
+                // Popola TipsTrue o TipsFalse
+                if (count == 2) {
+                    traces.TipsTrue.push_back({traceid, id1});
+                }
+                else {
+                    traces.TipsFalse.push_back({traceid, id1});
+                }
+                // Ripete per il poligono 2
+                count = 0;
+                for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
+                    if (distance(intersections[0], fractures.CoordVertices[id2][i]) + distance(intersections[0], fractures.CoordVertices[id2][i+1])
+                            - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
+                        count++;
+                    }
+                }
+                if (distance(intersections[0], fractures.CoordVertices[id2][0]) + distance(intersections[0], fractures.CoordVertices[id2][fractures.CoordVertices.size() - 1])
+                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    count++;
+                }
+                for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
+                    if (distance(intersections[1], fractures.CoordVertices[id2][i]) + distance(intersections[1], fractures.CoordVertices[id2][i+1])
+                            - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
+                        count++;
+                    }
+                }
+                if (distance(intersections[1], fractures.CoordVertices[id2][0]) + distance(intersections[1], fractures.CoordVertices[id2][fractures.CoordVertices.size() - 1])
+                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    count++;
+                }
+                if (count == 2) {
+                    traces.TipsTrue.push_back({traceid, id2});
+                }
+                else {
+                    traces.TipsFalse.push_back({traceid, id2});
+                }
+            }
         }
     }
 }
@@ -242,14 +309,14 @@ Vector4d calcsphere(const vector<Vector3d>& vertex_data)
         sphere(i) = baricentro(i);
     }
     // Trova il raggio massimo
-    double max_raggio = 0;
+    raggio = 0;
     for (size_t i = 0; i < raggi.size(); ++i) {
-        if (raggi[i] > max_raggio) {
-            max_raggio = raggi[i];
+        if (raggi[i] > raggio) {
+            raggio = raggi[i];
         }
     }
     // Salva al fondo di sphere il raggio
-    sphere(3) = max_raggio;
+    sphere(3) = raggio;
     return sphere;
 }
 double distance(const Vector3d& point1, const Vector3d& point2)

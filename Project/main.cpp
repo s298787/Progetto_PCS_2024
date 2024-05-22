@@ -15,7 +15,7 @@ int main()
 {
     Fractures dfn;
     Traces traces;
-    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR82_data.txt";
+    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR4_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File read" << endl;
@@ -69,12 +69,18 @@ int main()
     // }
     // cout << goodcouples.size() << endl;
     tracesfinder(dfn, goodcouples, traces, epsilon);
-
-    // Vector3d point(0,0,0);
-    // Vector3d dir(1,1,0);
-    // Vector3d point1(0,1,0);
-    // Vector3d dir1(1,0,0);
-    // Vector3d inter = intersectrettaretta(point,dir,point1,dir1);
-    // cout << inter(0) << ";" << inter(1) << ";" << inter(2) << endl;
+    // for (size_t i = 0; i < traces.TracesId.size(); ++i)
+    // {
+    //     cout << traces.TracesId[i] << ": " << traces.TracesFracturesId[i][0] << "&" << traces.TracesFracturesId[i][1] << endl;
+    //     cout << traces.TracesExtremesCoord[i][0].transpose() << " ; " << traces.TracesExtremesCoord[i][1].transpose() << endl;
+    // }
+    cout << "Passanti: " << endl;
+    for (size_t i = 0; i < traces.TipsTrue.size(); ++i) {
+        cout << traces.TipsTrue[i][0] << " passa per " << traces.TipsTrue[i][1] << endl;
+    }
+    cout << "Non passanti: " << endl;
+    for (size_t i = 0; i < traces.TipsFalse.size(); ++i) {
+        cout << traces.TipsFalse[i][0] << " non passa per " << traces.TipsFalse[i][1] << endl;
+    }
     return 0;
 }

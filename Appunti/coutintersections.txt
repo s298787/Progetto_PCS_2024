@@ -1,0 +1,8 @@
+cout << id1 << "&" << id2 << ": ";
+            for (Vector3d v : intersections) {
+                for (unsigned int i = 0; i < v.size(); ++i) {
+                    cout << v(i) << ";";
+                }
+                cout << "   ";
+            }
+            cout << endl;
