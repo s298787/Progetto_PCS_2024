@@ -19,7 +19,7 @@ double distance(const Vector3d& point1, const Vector3d& point2); //calcola la di
 Vector3d normal(const vector<Vector3d>& vertex_data); //funzione che calcola e normalizza il vettore normale al poligono
 bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
                          const Vector3d& point1, const Vector3d& dir1, Vector3d& inter); //funzione che trova il punto di intersezione retta-segmento
-Vector3d intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
-                              const Vector3d& point1, const Vector3d& dir1);
+bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
+                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control);
 
 }
