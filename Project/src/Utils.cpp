@@ -274,10 +274,14 @@ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
     Vector3d pl = point+t*dir;
     Vector3d pl1 = point1+s*dir1;
 
-    if((pl-pl1).norm()<1e-6) {
-        if (s >-1e-6 && s < 1.0+1e-6) {
+    if((pl-pl1).norm() < 1e-10) {
+        if (s > -1e-10 && s < 1.0+1e-10) {
             inter = point + t * dir;
             return true;
+        }
+        else {
+            inter = {1000,1000,1000};
+            return false;
         }
     }
     else {
@@ -298,8 +302,8 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
     Vector3d pl = point+t*dir;
     Vector3d pl1 = point1+s*dir1;
 
-    if((pl-pl1).norm()<1e-6 && t>=0) {
-        if (s >-1e-6 && s < 1.0+1e-6) {
+    if((pl-pl1).norm() < 1e-10 && t >= 0) {
+        if (s > -1e-10 && s < 1.0 + 1e-10) {
             control = point + t * dir;
             return true;
         }
