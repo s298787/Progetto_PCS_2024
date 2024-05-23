@@ -100,7 +100,7 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
             Vector3d point2(fractures.Spheres[id2](0), fractures.Spheres[id2](1), fractures.Spheres[id2](2));
             double r1 = fractures.Spheres[id1](3);
             double r2 = fractures.Spheres[id2](3);
-            if(Analytics::distance(point1, point2) < r1+r2) {
+            if(distance(point1, point2) < r1+r2) {
                 vector<unsigned int> ids = {id1, id2};
                 goodcouples.push_back(ids);
             }
@@ -131,15 +131,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
 
             vector<Vector3d> intersections;
             for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
-                if (Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i], inter)) {
+                if (intersectrettaretta(point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i], inter)) {
                     vector<Vector3d> verifica;
                     Vector3d control;
                     for (size_t j = 0; j<fractures.CoordVertices[id2].size()-1;++j) {
-                        if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
+                        if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
                             verifica.push_back(control);
                         }
                     }
-                    if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
+                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
                         verifica.push_back(control);
                     }
                     if (verifica.size()%2 != 0) {
@@ -151,15 +151,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
             }
 
-            if (Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], fractures.CoordVertices[id1][0] - fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], inter)) {
+            if (intersectrettaretta(point, tangent, fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], fractures.CoordVertices[id1][0] - fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], inter)) {
                 vector<Vector3d> verifica;
                 Vector3d control;
                 for (size_t j = 0; j<fractures.CoordVertices[id2].size()-1;++j) {
-                    if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
+                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
                         verifica.push_back(control);
                     }
                 }
-                if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
+                if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
                     verifica.push_back(control);
                 }
                 if (verifica.size()%2 != 0) {
@@ -171,15 +171,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             }
 
             for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
-                if (Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id2][i], fractures.CoordVertices[id2][i+1] - fractures.CoordVertices[id2][i], inter)) {
+                if (intersectrettaretta(point, tangent, fractures.CoordVertices[id2][i], fractures.CoordVertices[id2][i+1] - fractures.CoordVertices[id2][i], inter)) {
                     vector<Vector3d> verifica;
                     Vector3d control;
                     for (size_t j = 0; j<fractures.CoordVertices[id1].size()-1;++j) {
-                        if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
+                        if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
                             verifica.push_back(control);
                         }
                     }
-                    if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1], control)) {
+                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1], control)) {
                         verifica.push_back(control);
                     }
                     if (verifica.size()%2 != 0) {
@@ -191,15 +191,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
             }
 
-            if (Analytics::intersectrettaretta(point, tangent, fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], fractures.CoordVertices[id2][0] - fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], inter)) {
+            if (intersectrettaretta(point, tangent, fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], fractures.CoordVertices[id2][0] - fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], inter)) {
                 vector<Vector3d> verifica;
                 Vector3d control;
                 for (size_t j = 0; j<fractures.CoordVertices[id1].size()-1;++j) {
-                    if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
+                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
                         verifica.push_back(control);
                     }
                 }
-                if (Analytics::intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1], control)) {
+                if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1], control)) {
                     verifica.push_back(control);
                 }
                 if (verifica.size()%2 != 0) {
@@ -225,6 +225,8 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 // Popola TracesId
                 unsigned int traceid = traces.TracesExtremesCoord.size() - 1;
                 traces.TracesId.push_back(traceid);
+                // Popola TracesLengths
+                traces.TracesLengths.push_back(distance(intersections[0], intersections[1]));
                 // Controlla se la traccia è passante per il poligono 1
                 unsigned int count = 0;
                 // Controlla tutti i lati di id1 per il primo estremo della traccia
@@ -299,13 +301,16 @@ Vector4d calcsphere(const vector<Vector3d>& vertex_data)
     vector<double> raggi;
     double raggio;
 
-    // Calcola il baricentro come media delle posizioni dei vertici e per ogni vertice il raggio
+    // Calcola il baricentro come media delle posizioni dei vertici
     for (size_t k = 0; k < vertex_data.size(); ++k) {
         baricentro += vertex_data[k];
+    }
+    baricentro /= vertex_data.size();
+    // Calcola la distanza tra il baricentro e ciascuno dei raggi
+    for (size_t k = 0; k < vertex_data.size(); ++k) {
         raggio = distance(baricentro, vertex_data[k]);
         raggi.push_back(raggio);
     }
-    baricentro /= vertex_data.size();
     // Copia il baricentro nelle prime tre posizioni di sphere
     for (unsigned int i = 0; i < 3; ++i) {
         sphere(i) = baricentro(i);
@@ -317,7 +322,7 @@ Vector4d calcsphere(const vector<Vector3d>& vertex_data)
             raggio = raggi[i];
         }
     }
-    // Salva al fondo di sphere il raggio
+    // Salva il raggio al fondo di sphere
     sphere(3) = raggio;
     return sphere;
 }
@@ -398,10 +403,10 @@ bool printtraces(const string& tracesfileout, const Traces& traces)
         return false;
     }
 
-    fileout << "# Number of Traces" << endl; // Scrive la riga di intestazione
-    fileout << traces.TracesNumber << endl; // Scrive il numero di tracce
+    fileout << "# Number of Traces" << endl; // Stampa la riga di intestazione
+    fileout << traces.TracesNumber << endl; // Stampa il numero di tracce
     for (size_t i = 0; i < traces.TracesNumber; ++i) {
-        // Per ogni traccia scrive gli id e le coordinate degli estremi
+        // Per ogni traccia stampa gli id e le coordinate degli estremi
         fileout << "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2" << endl;
         fileout << traces.TracesId[i] << "; " << traces.TracesFracturesId[i][0] << "; " << traces.TracesFracturesId[i][1] << "; ";
         for (unsigned int j = 0; j < 2; ++j) {
@@ -419,7 +424,9 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
     ofstream fileout(tipsfileout);
     if (fileout.fail()) {
         cerr << "Error while creating/opening " << tipsfileout << endl;
+        return false;
     }
+
     // Scorre gli id delle fratture
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
         vector<unsigned int> idtraces;
@@ -429,7 +436,7 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
                 idtraces.push_back(j);
             }
         }
-        // Stampa su file
+        // Stampa su file le informazioni sulla frattura
         fileout << "# FractureId; NumTraces" << endl;
         fileout << id << "; " << idtraces.size() << endl;
 
@@ -437,14 +444,10 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
         size_t rem_size = idtraces.size();
         size_t last_seen = rem_size;
         bool swapped = true;
-        double lengthA;
-        double lengthB;
         while (swapped) {
             swapped = false;
             for (size_t i = 1; i < rem_size; i++) {
-                lengthA = Analytics::distance(traces.TracesExtremesCoord[i-1][0], traces.TracesExtremesCoord[i-1][1]);
-                lengthB = Analytics::distance(traces.TracesExtremesCoord[i][0], traces.TracesExtremesCoord[i][1]);
-                if (lengthA < lengthB) {
+                if (traces.TracesLengths[idtraces[i-1]] < traces.TracesLengths[idtraces[i]]) {
                     swap(idtraces[i-1], idtraces[i]);
                     swapped = true;
                     last_seen = i;
@@ -453,50 +456,31 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
             rem_size = last_seen;
         }
 
-        double length;
-        vector<unsigned int> confronto;
         // Stampa su file le informazioni sulle tracce passanti appartenenti a id
+        vector<unsigned int> confronto;
+        unsigned int id_t;
         for (size_t k = 0; k < idtraces.size(); ++k) {
-            confronto = {idtraces[k], id};
+            id_t = idtraces[k];
+            confronto = {id_t, id};
+            // Controlla se la coppia idtraccia - idfrattura è presente in TipsTrue e stampa
             if (find(traces.TipsTrue.begin(), traces.TipsTrue.end(), confronto) != traces.TipsTrue.end()) {
-                length = Analytics::distance(traces.TracesExtremesCoord[k][0], traces.TracesExtremesCoord[k][1]);
                 fileout << "# TraceId; Tips; Length" << endl;
-                fileout << idtraces[k] << "; " << "True" << "; " << length << endl;
+                fileout << idtraces[k] << "; " << "True" << "; " << traces.TracesLengths[id_t] << endl;
             }
         }
-
         // Stampa su file le informazioni sulle tracce non passanti appartenenti a id
         for (size_t k = 0; k < idtraces.size(); ++k) {
-            confronto = {idtraces[k], id};
+            id_t = idtraces[k];
+            confronto = {id_t, id};
+            // Controlla se la coppia idtraccia - idfrattura è presente in TipsFalse e stampa
             if (find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
-                length = Analytics::distance(traces.TracesExtremesCoord[k][0], traces.TracesExtremesCoord[k][1]);
                 fileout << "# TraceId; Tips; Length" << endl;
-                fileout << idtraces[k] << "; " << "False" << "; " << length << endl;
+                fileout << idtraces[k] << "; " << "False" << "; " << traces.TracesLengths[id_t] << endl;
             }
         }
         fileout << endl;
     }
-}
-}
-
-namespace SortingLibrary {
-template<typename T>
-void BubbleSort(vector<T>& data)
-{
-    size_t rem_size = data.size();
-    size_t last_seen = rem_size;
-    bool swapped = true;
-
-    while (swapped) {
-        swapped = false;
-        for (size_t i = 1; i < rem_size; i++) {
-            if (data[i-1] < data[i]) {
-                swap(data[i-1], data[i]);
-                swapped = true;
-                last_seen = i;
-            }
-        }
-        rem_size = last_seen;
-    }
+    fileout.close();
+    return true;
 }
 }

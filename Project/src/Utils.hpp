@@ -20,7 +20,7 @@ Vector3d normal(const vector<Vector3d>& vertex_data); //funzione che calcola e n
 bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
                          const Vector3d& point1, const Vector3d& dir1, Vector3d& inter); //funzione che trova il punto di intersezione retta-segmento
 bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
-                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control);
+                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control); //funzione che trova il punto di intersezione semiretta-segmento
 
 }
 
@@ -28,9 +28,4 @@ namespace OutputFileTools {
 using namespace Polygons;
 bool printtraces(const string& tracesfileout, const Traces& traces); //funzione che stampa su file i risultati delle tracce
 bool printtips(const string& tipsfileout, const Traces& traces, const Fractures& fractures); //funzione che stampa su file le tracce divise in passanti e non
-}
-
-namespace SortingLibrary {
-template<typename T>
-void BubbleSort(vector<T>& data); //funzione che ordina un vettore in modo decrescente
 }

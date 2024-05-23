@@ -16,7 +16,7 @@ int main()
 {
     Fractures dfn;
     Traces traces;
-    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR10_data.txt";
+    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR50_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File " << filename << " read" << endl;
@@ -39,36 +39,8 @@ int main()
     //     cout << endl;
     // }
 
-    // if(dfn.NumVertices.empty())
-    // {
-    //     cout << "La mappa NumVertices è vuota" << endl;
-    // }
-
-    // for (Vector4d sp : dfn.Spheres)
-    // {
-    //     for (unsigned int i = 0; i < 4; ++i)
-    //     {
-    //         cout << sp(i) << ";";
-    //     }
-    //     cout << endl;
-    // }
-
-    // for (Vector3d n : dfn.Normals)
-    // {
-    //     for (size_t i = 0; i < n.size(); ++i)
-    //     {
-    //         cout << n(i) << ";";
-    //     }
-    //     cout << endl;
-    // }
-
     double epsilon = 10*numeric_limits<double>::epsilon();
     list<vector<unsigned int>> goodcouples = checkspheres(dfn);
-    // for (vector<unsigned int> couple : goodcouples)
-    // {
-    //     cout << couple[0] << ";" << couple [1] << endl;
-    // }
-    // cout << goodcouples.size() << endl;
     tracesfinder(dfn, goodcouples, traces, epsilon);
     // for (size_t i = 0; i < traces.TracesId.size(); ++i)
     // {
