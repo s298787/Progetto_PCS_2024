@@ -16,7 +16,7 @@ bool importdfn(const string& filename, Fractures& fractures)
 {
     ifstream file(filename);
     if (!file.is_open()) {
-        cerr << "Errore nell'apertura del file" << endl;
+        cerr << "Errore while opening " << filename << endl;
         return false;
     }
 
@@ -88,6 +88,7 @@ bool importdfn(const string& filename, Fractures& fractures)
         // Calcola e normalizza il prodotto scalare tra i vettori che congiungono i primi tre vertici, popola Normals
         fractures.Normals.push_back(Analytics::normal(vertex_data));
     }
+    file.close();
     return true;
 }
 list<vector<unsigned int>> checkspheres(const Fractures& fractures)
@@ -286,6 +287,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             }
         }
     }
+    traces.NumTraces = traces.TracesId.size();
 }
 }
 
@@ -383,5 +385,33 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
         control = {1000,1000,1000};
         return false;
     }
+}
+}
+
+namespace OutputFileTools {
+using namespace Polygons;
+bool printtraces(const string& tracesfileout, const Traces& traces)
+{
+    ofstream fileout(tracesfileout);
+    if (fileout.fail()) {
+        cerr << "Error while creating/opening " << tracesfileout << endl;
+        return false;
+    }
+
+    fileout << "# Number of Traces" << endl; // Scrive la riga di intestazione
+    fileout << traces.NumTraces << endl; // Scrive il numero di tracce
+    for (size_t i = 0; i < traces.NumTraces; ++i) {
+        // Per ogni traccia scrive gli id e le coordinate degli estremi
+        fileout << "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2" << endl;
+        fileout << traces.TracesId[i] << "; " << traces.TracesFracturesId[i][0] << "; " << traces.TracesFracturesId[i][1] << "; ";
+        for (unsigned int j = 0; j < 2; ++j) {
+            for (unsigned int k = 0; k < 3; ++k) {
+                fileout << traces.TracesExtremesCoord[i][j](k) << "; ";
+            }
+        }
+        fileout << endl;
+    }
+    fileout.close();
+    return true;
 }
 }

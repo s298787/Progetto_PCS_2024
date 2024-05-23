@@ -8,6 +8,7 @@ using namespace Eigen;
 
 namespace Polygons {
 struct Traces {
+    unsigned int NumTraces; //numero di tracce
     vector<vector<Vector3d>> TracesExtremesCoord; //array con le coordinate degli estremi delle tracce
     vector<unsigned int> TracesId; //array con gli id delle tracce
     vector<vector<unsigned int>> TracesFracturesId; //array con gli id delle coppie di fratture che generano le tracce

@@ -23,3 +23,9 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
                               const Vector3d& point1, const Vector3d& dir1, Vector3d& control);
 
 }
+
+namespace OutputFileTools {
+using namespace Polygons;
+bool printtraces(const string& tracesfileout, const Traces& traces); //funzione che stampa su file i risultati delle tracce
+bool printtips(const string& filename, const Traces& traces); //funzione che stampa su file le tracce divise in passanti e non
+}

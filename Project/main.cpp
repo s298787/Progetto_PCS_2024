@@ -10,6 +10,7 @@ using namespace std;
 using namespace Eigen;
 using namespace Polygons;
 using namespace Analytics;
+using namespace OutputFileTools;
 
 int main()
 {
@@ -18,7 +19,7 @@ int main()
     string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR4_data.txt";
     if(importdfn(filename, dfn))
     {
-        cout << "File read" << endl;
+        cout << "File " << filename << " read" << endl;
     }
 
     // if(dfn.CoordVertices.empty())
@@ -74,13 +75,17 @@ int main()
     //     cout << traces.TracesId[i] << ": " << traces.TracesFracturesId[i][0] << "&" << traces.TracesFracturesId[i][1] << endl;
     //     cout << traces.TracesExtremesCoord[i][0].transpose() << " ; " << traces.TracesExtremesCoord[i][1].transpose() << endl;
     // }
-    cout << "Passanti: " << endl;
-    for (size_t i = 0; i < traces.TipsTrue.size(); ++i) {
-        cout << traces.TipsTrue[i][0] << " passa per " << traces.TipsTrue[i][1] << endl;
-    }
-    cout << "Non passanti: " << endl;
-    for (size_t i = 0; i < traces.TipsFalse.size(); ++i) {
-        cout << traces.TipsFalse[i][0] << " non passa per " << traces.TipsFalse[i][1] << endl;
+    // cout << "Passanti: " << endl;
+    // for (size_t i = 0; i < traces.TipsTrue.size(); ++i) {
+    //     cout << traces.TipsTrue[i][0] << " passa per " << traces.TipsTrue[i][1] << endl;
+    // }
+    // cout << "Non passanti: " << endl;
+    // for (size_t i = 0; i < traces.TipsFalse.size(); ++i) {
+    //     cout << traces.TipsFalse[i][0] << " non passa per " << traces.TipsFalse[i][1] << endl;
+    // }
+    string tracesfileout = "traces_" + to_string(dfn.FracturesNumber) + ".txt";
+    if(printtraces(tracesfileout, traces)) {
+        cout << "File " << tracesfileout << " written" << endl;
     }
     return 0;
 }
