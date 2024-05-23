@@ -287,7 +287,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             }
         }
     }
-    traces.NumTraces = traces.TracesId.size();
+    traces.TracesNumber = traces.TracesId.size();
 }
 }
 
@@ -399,8 +399,8 @@ bool printtraces(const string& tracesfileout, const Traces& traces)
     }
 
     fileout << "# Number of Traces" << endl; // Scrive la riga di intestazione
-    fileout << traces.NumTraces << endl; // Scrive il numero di tracce
-    for (size_t i = 0; i < traces.NumTraces; ++i) {
+    fileout << traces.TracesNumber << endl; // Scrive il numero di tracce
+    for (size_t i = 0; i < traces.TracesNumber; ++i) {
         // Per ogni traccia scrive gli id e le coordinate degli estremi
         fileout << "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2" << endl;
         fileout << traces.TracesId[i] << "; " << traces.TracesFracturesId[i][0] << "; " << traces.TracesFracturesId[i][1] << "; ";
@@ -413,5 +413,90 @@ bool printtraces(const string& tracesfileout, const Traces& traces)
     }
     fileout.close();
     return true;
+}
+bool printtips(const string& tipsfileout, const Traces& traces, const Fractures& fractures)
+{
+    ofstream fileout(tipsfileout);
+    if (fileout.fail()) {
+        cerr << "Error while creating/opening " << tipsfileout << endl;
+    }
+    // Scorre gli id delle fratture
+    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
+        vector<unsigned int> idtraces;
+        // Verifica quali tracce passano per la frattura id e le memorizza in idtraces
+        for (size_t j = 0; j < traces.TracesNumber; ++j) {
+            if (traces.TracesFracturesId[j][0] == id || traces.TracesFracturesId[j][1] == id) {
+                idtraces.push_back(j);
+            }
+        }
+        // Stampa su file
+        fileout << "# FractureId; NumTraces" << endl;
+        fileout << id << "; " << idtraces.size() << endl;
+
+        // Ordina idtraces in base alla lunghezza delle tracce
+        size_t rem_size = idtraces.size();
+        size_t last_seen = rem_size;
+        bool swapped = true;
+        double lengthA;
+        double lengthB;
+        while (swapped) {
+            swapped = false;
+            for (size_t i = 1; i < rem_size; i++) {
+                lengthA = Analytics::distance(traces.TracesExtremesCoord[i-1][0], traces.TracesExtremesCoord[i-1][1]);
+                lengthB = Analytics::distance(traces.TracesExtremesCoord[i][0], traces.TracesExtremesCoord[i][1]);
+                if (lengthA < lengthB) {
+                    swap(idtraces[i-1], idtraces[i]);
+                    swapped = true;
+                    last_seen = i;
+                }
+            }
+            rem_size = last_seen;
+        }
+
+        double length;
+        vector<unsigned int> confronto;
+        // Stampa su file le informazioni sulle tracce passanti appartenenti a id
+        for (size_t k = 0; k < idtraces.size(); ++k) {
+            confronto = {idtraces[k], id};
+            if (find(traces.TipsTrue.begin(), traces.TipsTrue.end(), confronto) != traces.TipsTrue.end()) {
+                length = Analytics::distance(traces.TracesExtremesCoord[k][0], traces.TracesExtremesCoord[k][1]);
+                fileout << "# TraceId; Tips; Length" << endl;
+                fileout << idtraces[k] << "; " << "True" << "; " << length << endl;
+            }
+        }
+
+        // Stampa su file le informazioni sulle tracce non passanti appartenenti a id
+        for (size_t k = 0; k < idtraces.size(); ++k) {
+            confronto = {idtraces[k], id};
+            if (find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
+                length = Analytics::distance(traces.TracesExtremesCoord[k][0], traces.TracesExtremesCoord[k][1]);
+                fileout << "# TraceId; Tips; Length" << endl;
+                fileout << idtraces[k] << "; " << "False" << "; " << length << endl;
+            }
+        }
+        fileout << endl;
+    }
+}
+}
+
+namespace SortingLibrary {
+template<typename T>
+void BubbleSort(vector<T>& data)
+{
+    size_t rem_size = data.size();
+    size_t last_seen = rem_size;
+    bool swapped = true;
+
+    while (swapped) {
+        swapped = false;
+        for (size_t i = 1; i < rem_size; i++) {
+            if (data[i-1] < data[i]) {
+                swap(data[i-1], data[i]);
+                swapped = true;
+                last_seen = i;
+            }
+        }
+        rem_size = last_seen;
+    }
 }
 }

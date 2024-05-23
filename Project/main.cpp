@@ -16,7 +16,7 @@ int main()
 {
     Fractures dfn;
     Traces traces;
-    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR4_data.txt";
+    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR10_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File " << filename << " read" << endl;
@@ -85,7 +85,11 @@ int main()
     // }
     string tracesfileout = "traces_" + to_string(dfn.FracturesNumber) + ".txt";
     if(printtraces(tracesfileout, traces)) {
-        cout << "File " << tracesfileout << " written" << endl;
+        cout << "File " << tracesfileout << " written successfully" << endl;
+    }
+    string tipsfileout = "tips_" + to_string(dfn.FracturesNumber) + ".txt";
+    if(printtips(tipsfileout, traces, dfn)) {
+        cout << "File " << tipsfileout << " written successfully" << endl;
     }
     return 0;
 }

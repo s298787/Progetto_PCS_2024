@@ -27,5 +27,10 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
 namespace OutputFileTools {
 using namespace Polygons;
 bool printtraces(const string& tracesfileout, const Traces& traces); //funzione che stampa su file i risultati delle tracce
-bool printtips(const string& filename, const Traces& traces); //funzione che stampa su file le tracce divise in passanti e non
+bool printtips(const string& tipsfileout, const Traces& traces, const Fractures& fractures); //funzione che stampa su file le tracce divise in passanti e non
+}
+
+namespace SortingLibrary {
+template<typename T>
+void BubbleSort(vector<T>& data); //funzione che ordina un vettore in modo decrescente
 }
