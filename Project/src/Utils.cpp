@@ -94,14 +94,17 @@ bool importdfn(const string& filename, Fractures& fractures)
 list<vector<unsigned int>> checkspheres(const Fractures& fractures)
 {
     list<vector<unsigned int>> goodcouples;
+    double r1;
+    double r2;
+    vector<unsigned int> ids;
     for (unsigned int id1 = 0; id1 < fractures.FracturesNumber - 1; ++id1) {
         for (unsigned int id2 = id1 + 1; id2 < fractures.FracturesNumber; ++id2) {
             Vector3d point1(fractures.Spheres[id1](0), fractures.Spheres[id1](1), fractures.Spheres[id1](2));
             Vector3d point2(fractures.Spheres[id2](0), fractures.Spheres[id2](1), fractures.Spheres[id2](2));
-            double r1 = fractures.Spheres[id1](3);
-            double r2 = fractures.Spheres[id2](3);
+            r1 = fractures.Spheres[id1](3);
+            r2 = fractures.Spheres[id2](3);
             if(distance(point1, point2) < r1+r2) {
-                vector<unsigned int> ids = {id1, id2};
+                ids = {id1, id2};
                 goodcouples.push_back(ids);
             }
         }
@@ -111,25 +114,35 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
 void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& goodcouples, Traces& traces, const double& epsilon)
 {
     Vector3d inter;
+    vector<Vector3d> intersections;
+    unsigned int id1;
+    unsigned int id2;
+    Vector3d n1;
+    Vector3d n2;
+    Vector3d tangent;
+    double d1;
+    double d2;
+    Matrix<double, 2, 3> A;
+    Vector3d point;
     for(vector<unsigned int> couple : goodcouples) {
-        unsigned int id1 = couple[0];
-        unsigned int id2 = couple[1];
-        Vector3d n1 = fractures.Normals[id1];
-        Vector3d n2 = fractures.Normals[id2];
-        Vector3d tangent = n1.cross(n2);
+        id1 = couple[0];
+        id2 = couple[1];
+        n1 = fractures.Normals[id1];
+        n2 = fractures.Normals[id2];
+        tangent = n1.cross(n2);
         if (tangent.norm() > epsilon) { // Controlla che i piani non siano paralleli
-            double d1 = n1.dot(fractures.CoordVertices[id1][0]);
-            double d2 = n2.dot(fractures.CoordVertices[id2][0]);
+            d1 = n1.dot(fractures.CoordVertices[id1][0]);
+            d2 = n2.dot(fractures.CoordVertices[id2][0]);
 
-            Matrix<double, 2, 3> A;
+            // Matrix<double, 2, 3> A;
             A.row(0) = n1.transpose();
             A.row(1) = n2.transpose();
             Vector2d b(d1,d2);
 
             // Risolvi il sistema di equazioni lineari per trovare il punto di intersezione
-            Vector3d point = A.fullPivLu().solve(b);
+            point = A.fullPivLu().solve(b);
 
-            vector<Vector3d> intersections;
+            // vector<Vector3d> intersections;
             for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                 if (intersectrettaretta(point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i], inter)) {
                     vector<Vector3d> verifica;
@@ -227,12 +240,13 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 traces.TracesId.push_back(traceid);
                 // Popola TracesLengths
                 traces.TracesLengths.push_back(distance(intersections[0], intersections[1]));
-                // Controlla se la traccia è passante per il poligono 1
+                // Controlla se la traccia è passante per il poligono id1, per farlo vede se entrambi gli estremi giacciono su un lato di id1
+                // Per verificare se un estremo giace su un lato controlla se la somma delle distanze tra l'estremo e i vertici è uguale alla lunghezza del lato
                 unsigned int count = 0;
                 // Controlla tutti i lati di id1 per il primo estremo della traccia
                 for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                     if (distance(intersections[0], fractures.CoordVertices[id1][i]) + distance(intersections[0], fractures.CoordVertices[id1][i+1])
-                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i]) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i]) <= 1e-6) {
                         count++;
                     }
                 }
@@ -243,12 +257,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 // Controlla tutti i lati di id1 per il primo estremo della traccia
                 for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                     if (distance(intersections[1], fractures.CoordVertices[id1][i]) + distance(intersections[1], fractures.CoordVertices[id1][i+1])
-                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i]) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i]) <= 1e-6) {
                         count++;
                     }
                 }
                 if (distance(intersections[1], fractures.CoordVertices[id1][0]) + distance(intersections[1], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
-                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1]) <= 1e-6) {
                     count++;
                 }
                 // Popola TipsTrue o TipsFalse
@@ -258,11 +272,11 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 else {
                     traces.TipsFalse.push_back({traceid, id1});
                 }
-                // Ripete per il poligono 2
+                // Ripete per il poligono id2
                 count = 0;
                 for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
                     if (distance(intersections[0], fractures.CoordVertices[id2][i]) + distance(intersections[0], fractures.CoordVertices[id2][i+1])
-                            - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
                         count++;
                     }
                 }
@@ -272,7 +286,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
                 for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
                     if (distance(intersections[1], fractures.CoordVertices[id2][i]) + distance(intersections[1], fractures.CoordVertices[id2][i+1])
-                            - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
                         count++;
                     }
                 }
@@ -288,7 +302,9 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
             }
         }
+        intersections.clear(); // Svuota intersections
     }
+    // Popola TracesNumber
     traces.TracesNumber = traces.TracesId.size();
 }
 }
@@ -363,7 +379,6 @@ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
         return false;
     }
 }
-
 bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control)
 {
@@ -426,10 +441,11 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
         cerr << "Error while creating/opening " << tipsfileout << endl;
         return false;
     }
-
+    unsigned int id_t;
+    vector<unsigned int> confronto;
+    vector<unsigned int> idtraces;
     // Scorre gli id delle fratture
-    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
-        vector<unsigned int> idtraces;
+    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {        
         // Verifica quali tracce passano per la frattura id e le memorizza in idtraces
         for (size_t j = 0; j < traces.TracesNumber; ++j) {
             if (traces.TracesFracturesId[j][0] == id || traces.TracesFracturesId[j][1] == id) {
@@ -457,8 +473,6 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
         }
 
         // Stampa su file le informazioni sulle tracce passanti appartenenti a id
-        vector<unsigned int> confronto;
-        unsigned int id_t;
         for (size_t k = 0; k < idtraces.size(); ++k) {
             id_t = idtraces[k];
             confronto = {id_t, id};
@@ -479,6 +493,7 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
             }
         }
         fileout << endl;
+        idtraces.clear(); // Svuota idtraces
     }
     fileout.close();
     return true;

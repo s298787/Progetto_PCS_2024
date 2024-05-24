@@ -16,7 +16,7 @@ int main()
 {
     Fractures dfn;
     Traces traces;
-    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR50_data.txt";
+    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR10_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File " << filename << " read" << endl;

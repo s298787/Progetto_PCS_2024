@@ -20,7 +20,7 @@ Vector3d normal(const vector<Vector3d>& vertex_data); //funzione che calcola e n
 bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
                          const Vector3d& point1, const Vector3d& dir1, Vector3d& inter); //funzione che trova il punto di intersezione retta-segmento
 bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
-                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control); //funzione che trova il punto di intersezione semiretta-segmento
+                             const Vector3d& point1, const Vector3d& dir1, Vector3d& control); //funzione che trova il punto di intersezione semiretta-segmento
 
 }
 
