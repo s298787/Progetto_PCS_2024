@@ -12,6 +12,7 @@ using namespace std;
 using namespace Eigen;
 using namespace Analytics;
 
+// Parte 1
 namespace Polygons {
 bool importdfn(const string& filename, Fractures& fractures)
 {
@@ -114,16 +115,16 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
 }
 void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& goodcouples, Traces& traces, const double& epsilon)
 {
-    Vector3d inter;
-    vector<Vector3d> intersections;
-    unsigned int id1;
-    unsigned int id2;
-    Vector3d n1;
-    Vector3d n2;
-    Vector3d tangent;
-    double d1;
-    double d2;
-    Matrix<double, 2, 3> A;
+    Vector3d inter; // Vettore in cui viene salvata la singola intersezione
+    vector<Vector3d> intersections; // Array delle intersezioni
+    unsigned int id1; // Id della prima fattura
+    unsigned int id2; // Id della seconda frattura
+    Vector3d n1; // Normale a id1
+    Vector3d n2;// Normale a id2
+    Vector3d tangent; // Direttrice retta di intersezione
+    double d1; // Termine noto relativo al piano id1
+    double d2; // Termine noto relativo al piano id2
+    Matrix<double, 2, 3> A; // Matrice del sistema lineare di piani
     Vector3d point;
     for(vector<unsigned int> couple : goodcouples) {
         id1 = couple[0];
@@ -223,7 +224,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                     intersections.push_back(inter);
                 }
             }
-            // Elimina gli elementi ripetuti da intersections
+            // Elimina gli elementi ripetuti in intersections
             for (size_t i = 0; i < intersections.size(); ++i) {
                 for (size_t j = i + 1; j < intersections.size(); ++j) {
                     if ((intersections[i] - intersections[j]).norm() < 1e-10) {
@@ -437,6 +438,22 @@ bool printtraces(const string& tracesfileout, const Traces& traces)
 }
 bool printtips(const string& tipsfileout, const Traces& traces, const Fractures& fractures)
 {
+    // Ordina TracesId in base alla lunghezza delle tracce
+    size_t rem_size = traces.TracesNumber;
+    size_t last_seen = rem_size;
+    bool swapped = true;
+    while (swapped) {
+        swapped = false;
+        for (size_t i = 1; i < rem_size; i++) {
+            if (traces.TracesLengths[traces.TracesId[i-1]] < traces.TracesLengths[traces.TracesId[i]]) {
+                swap(traces.TracesId[i-1], traces.TracesId[i]);
+                swapped = true;
+                last_seen = i;
+            }
+        }
+        rem_size = last_seen;
+    }
+
     ofstream fileout(tipsfileout);
     if (fileout.fail()) {
         cerr << "Error while creating/opening " << tipsfileout << endl;
@@ -449,8 +466,9 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {        
         // Verifica quali tracce passano per la frattura id e le memorizza in idtraces
         for (size_t j = 0; j < traces.TracesNumber; ++j) {
-            if (traces.TracesFracturesId[j][0] == id || traces.TracesFracturesId[j][1] == id) {
-                idtraces.push_back(j);
+            id_t = traces.TracesId[j];
+            if (traces.TracesFracturesId[id_t][0] == id || traces.TracesFracturesId[id_t][1] == id) {
+                idtraces.push_back(id_t);
             }
         }
         // Stampa su file le informazioni sulla frattura
@@ -458,20 +476,20 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
         fileout << id << "; " << idtraces.size() << endl;
 
         // Ordina idtraces in base alla lunghezza delle tracce
-        size_t rem_size = idtraces.size();
-        size_t last_seen = rem_size;
-        bool swapped = true;
-        while (swapped) {
-            swapped = false;
-            for (size_t i = 1; i < rem_size; i++) {
-                if (traces.TracesLengths[idtraces[i-1]] < traces.TracesLengths[idtraces[i]]) {
-                    swap(idtraces[i-1], idtraces[i]);
-                    swapped = true;
-                    last_seen = i;
-                }
-            }
-            rem_size = last_seen;
-        }
+        // size_t rem_size = idtraces.size();
+        // size_t last_seen = rem_size;
+        // bool swapped = true;
+        // while (swapped) {
+        //     swapped = false;
+        //     for (size_t i = 1; i < rem_size; i++) {
+        //         if (traces.TracesLengths[idtraces[i-1]] < traces.TracesLengths[idtraces[i]]) {
+        //             swap(idtraces[i-1], idtraces[i]);
+        //             swapped = true;
+        //             last_seen = i;
+        //         }
+        //     }
+        //     rem_size = last_seen;
+        // }
 
         // Stampa su file le informazioni sulle tracce passanti appartenenti a id
         for (size_t k = 0; k < idtraces.size(); ++k) {
@@ -480,7 +498,7 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
             // Controlla se la coppia idtraccia - idfrattura è presente in TipsTrue e stampa
             if (find(traces.TipsTrue.begin(), traces.TipsTrue.end(), confronto) != traces.TipsTrue.end()) {
                 fileout << "# TraceId; Tips; Length" << endl;
-                fileout << idtraces[k] << "; " << "True" << "; " << traces.TracesLengths[id_t] << endl;
+                fileout << id_t << "; " << "True" << "; " << traces.TracesLengths[id_t] << endl;
             }
         }
         // Stampa su file le informazioni sulle tracce non passanti appartenenti a id
@@ -490,7 +508,7 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
             // Controlla se la coppia idtraccia - idfrattura è presente in TipsFalse e stampa
             if (find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
                 fileout << "# TraceId; Tips; Length" << endl;
-                fileout << idtraces[k] << "; " << "False" << "; " << traces.TracesLengths[id_t] << endl;
+                fileout << id_t << "; " << "False" << "; " << traces.TracesLengths[id_t] << endl;
             }
         }
         fileout << endl;
@@ -498,5 +516,13 @@ bool printtips(const string& tipsfileout, const Traces& traces, const Fractures&
     }
     fileout.close();
     return true;
+}
+}
+
+// Parte 2
+namespace MeshLibrary {
+using namespace Polygons;
+void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& mesh)
+{
 }
 }

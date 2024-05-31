@@ -6,7 +6,7 @@
 using namespace std;
 using namespace Eigen;
 
-namespace MeshTools {
+namespace MeshLibrary {
 struct PolygonalMesh {
     unsigned int NumberCell0d; // Numero di celle 0d
     vector<unsigned int> IdCell0d; // Array di id delle celle 0d

@@ -7,6 +7,7 @@
 using namespace std;
 using namespace Eigen;
 
+// Parte 1
 namespace Polygons {
 bool importdfn(const string& filename, Fractures& fractures); //funzione che apre e legge il file in input
 list<vector<unsigned int>> checkspheres(const Fractures& fractures); //funzione che screma le fratture in base alla distanza reciproca
@@ -28,4 +29,10 @@ namespace OutputFileTools {
 using namespace Polygons;
 bool printtraces(const string& tracesfileout, const Traces& traces); //funzione che stampa su file i risultati delle tracce
 bool printtips(const string& tipsfileout, const Traces& traces, const Fractures& fractures); //funzione che stampa su file le tracce divise in passanti e non
+}
+
+// Parte 2
+namespace MeshLibrary {
+using namespace Polygons;
+void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& mesh); //funzione che calcola la mesh
 }
