@@ -1,0 +1,76 @@
+@startuml
+package Polygons <<Folder>>{
+
+class Fractures{
++ FracturesNumber: unsigned int
++ CoordVertices: vector<vector<Vector3d>>
++ FracturesId: vector<unsigned int> 
++ NumVertices: map<unsigned int, list<unsigned int>> 
++ Spheres: vector<Vector4d> 
++ Normals: vector<Vector3d>
+
+..Non member functions..
++ bool importdfn(const string& filename, Fractures& fractures)
++ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
+
+..FRACTURES TEST..
+TestCorrectNumberOfFractures
+TestCorrectFractures
+TestChekSpheres
+}
+
+class Traces{
++ TracesExtremesCoord: vector<Matrix3d> 
++ TracesId: vector<unsigned int>
++ TracesFracturesId: vector<vector<unsigned int>> 
++ TipsFlag: map<bool, list<unsigned int>> 
+
+..Non member functions..
+void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& goodcouples, Traces& traces, const double& epsilon)
+
+..TRACES TEST..
+}
+}
+
+package Gedim <<Frame>>{
+}
+note "Gedim is an external library" as GedimN
+GedimN..Gedim
+
+Gedim ..> Fractures::gedimInterface 
+
+Traces "1"--o "2" Fractures : is made up
+
+package Analytics <<Folder>>{
+class Analytics_Functions{
++ Vector4d calcsphere(const vector<Vector3d>& vertex_data)
++ double distance(const Vector3d& point1, const Vector3d& point2)
++ Vector3d normal(const vector<Vector3d>& vertex_data)
++ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir, const Vector3d& point1, const Vector3d& dir1, Vector3d& inter)                    
++ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir, const Vector3d& point1, const Vector3d& dir1, Vector3d& control)
+
+..ANALYTICS TEST..
+TestSpheres
+TestDistance
+TestNormals
+TestIntersectrettaretta
+TestIntersectrettasemiretta
+}
+Analytics_Functions ..> Fractures                             
+}
+
+package MeshLibrary <<Folder>>{
+class PolygonalMesh{
+unsigned int NumberCell0d; // Numero di celle 0d
++ IdCell0d: vector<unsigned int> 
++ CoordCell0d: vector<Vector3d> 
++ NumberCell1d: unsigned int
++ IdCell1d: vector<unsigned int>
++ IdVerticesCell1d: vector<vector<unsigned int>>
++ NumberCell2d: unsigned int
++ IdCell2d: vector<unsigned int>
++ IdVerticesCell2d: vector<vector<unsigned int>>
++ IdEdgesCell2d: vector<vector<unsigned int>> 
+}
+}
+@enduml
