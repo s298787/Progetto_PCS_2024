@@ -1,6 +1,7 @@
 #include "Utils.hpp"
 #include "Fractures.hpp"
 #include "Traces.hpp"
+#include "PolygonalMesh.hpp"
 #include <Eigen/Eigen>
 #include <iostream>
 #include <vector>
@@ -11,12 +12,14 @@ using namespace Eigen;
 using namespace Polygons;
 using namespace Analytics;
 using namespace OutputFileTools;
+using namespace MeshLibrary;
 
 int main()
 {
     Fractures dfn;
     Traces traces;
-    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR10_data.txt";
+    PolygonalMesh mesh;
+    string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR3_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File " << filename << " read" << endl;
@@ -63,5 +66,6 @@ int main()
     if(printtips(tipsfileout, traces, dfn)) {
         cout << "File " << tipsfileout << " written successfully" << endl;
     }
+    meshcalc(traces, dfn, mesh);
     return 0;
 }
