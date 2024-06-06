@@ -126,7 +126,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
     double d2; // Termine noto relativo al piano id2
     Matrix<double, 2, 3> A; // Matrice del sistema lineare di piani
     Vector3d point;
-    for(vector<unsigned int> couple : goodcouples) {
+    for(const vector<unsigned int>& couple : goodcouples) {
         id1 = couple[0];
         id2 = couple[1];
         n1 = fractures.Normals[id1];
@@ -475,22 +475,6 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
         fileout << "# FractureId; NumTraces" << endl;
         fileout << id << "; " << idtraces.size() << endl;
 
-        // Ordina idtraces in base alla lunghezza delle tracce
-        // size_t rem_size = idtraces.size();
-        // size_t last_seen = rem_size;
-        // bool swapped = true;
-        // while (swapped) {
-        //     swapped = false;
-        //     for (size_t i = 1; i < rem_size; i++) {
-        //         if (traces.TracesLengths[idtraces[i-1]] < traces.TracesLengths[idtraces[i]]) {
-        //             swap(idtraces[i-1], idtraces[i]);
-        //             swapped = true;
-        //             last_seen = i;
-        //         }
-        //     }
-        //     rem_size = last_seen;
-        // }
-
         // Stampa su file le informazioni sulle tracce passanti appartenenti a id
         for (size_t k = 0; k < idtraces.size(); ++k) {
             id_t = idtraces[k];
@@ -525,13 +509,18 @@ using namespace Polygons;
 using namespace Analytics;
 void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& mesh)
 {
+    vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
+    vector<Vector3d> fracture;
+    vector<unsigned int> confronto;
+    vector<unsigned int> idtraces;
+    vector<vector<Vector3d>> copia;
+    Vector3d inter;
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
-        vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
-        vector<Vector3d> fracture = fractures.CoordVertices[id];
+        // vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
+        fracture = fractures.CoordVertices[id];
         sottopoligoni.push_back(fracture); // Inizializza sottopoligoni uguale alla frattura
         // Crea un array di tracce della singola frattura
-        vector<unsigned int> idtraces;
-        vector<unsigned int> confronto;
+
         // Popola con le tracce passanti
         for (unsigned int j = 0; j < traces.TracesNumber; ++j) {
             unsigned int id_tr = traces.TracesId[j];
@@ -551,25 +540,28 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
             }
         }
 
-        cout << id << endl;
+        // cout << id << endl;
         // Cicla su tutte le tracce della frattura
-        // sottopoligoni.reserve(pow(2, idtraces.size()));
-        vector<vector<Vector3d>> copia;
-        Vector3d inter;
-        for (unsigned int id_t : idtraces) {
+        sottopoligoni.reserve(pow(2, idtraces.size()));
+        vector<Vector3d> currentpolygon;
+        vector<Vector3d> traceverts;
+        for (const unsigned int& id_t : idtraces) {
             unsigned int n = sottopoligoni.size();
-            copia = sottopoligoni;
+            // copia = sottopoligoni;
             // Cicla su tutti gli attuali sottopoligoni
+            // vector<Vector3d> currentpolygon;
+            // vector<Vector3d> traceverts;
             for (unsigned int i = 0; i < n; ++i) {
-                vector<Vector3d> currentpolygon = sottopoligoni[i];
-                vector<Vector3d> traceverts = traces.TracesExtremesCoord[id_t];
+                currentpolygon = sottopoligoni[i];
+                traceverts = traces.TracesExtremesCoord[id_t];
 
                 // Usiamo il ray-casting sugli estremi della traccia
                 bool raycasting = false;
-                for (Vector3d vert : traceverts) {
+                Vector3d direction;
+                for (const Vector3d& vert : traceverts) {
                     unsigned int countraycasting = 0;
                     if (!raycasting) {
-                        Vector3d direction = currentpolygon[0] - vert;
+                        direction = currentpolygon[0] - vert;
                         for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
                             if (intersectrettasemiretta(vert, direction, currentpolygon[j],
                                                         currentpolygon[j+1] - currentpolygon[j], inter)) {
@@ -596,7 +588,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
                 if (!raycasting) {
                     unsigned int countdoubleintersections = 0;
                     Vector3d vert = traceverts[0];
-                    Vector3d direction = traceverts[1] - traceverts[0];
+                    direction = traceverts[1] - traceverts[0];
                     // Controlla se la retta della traccia interseca il lato e poi verifica
                     // se l'intersezione è interna alla traccia
                     for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
@@ -652,11 +644,12 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
 
             }
             sottopoligoni = copia;
+            copia.clear();
         }
 
         // Popola mesh
-
-        // sottopoligoni.clear();
+        idtraces.clear();
+        sottopoligoni.clear();
     }
 }
 }
