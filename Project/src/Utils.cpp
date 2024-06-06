@@ -408,6 +408,42 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
         return false;
     }
 }
+double calcolangolo(const Vector3d& v1, const Vector3d& v2, const Vector3d& normal) {
+    Vector3d cross_product = v1.cross(v2);
+    double dot_product = v1.dot(v2);
+    double angle = atan2(cross_product.norm(), dot_product);
+    if (normal.dot(cross_product) < 0) {
+        angle = 2 * M_PI - angle;
+    }
+    return angle;
+}
+vector<Vector3d> antiorario(const vector<Vector3d>& sottopol, const Vector3d& normal)
+{
+
+    Vector3d baricentro = {0,0,0};
+    for (size_t k = 0; k < sottopol.size(); ++k) {
+        baricentro += sottopol[k];
+    }
+    baricentro /= sottopol.size();
+    vector<pair<Vector3d, double>> verticiangoli;
+    for (size_t j=0; j<sottopol.size();++j) {
+        double angolo = calcolangolo(Vector3d(1,0,0),sottopol[j]-baricentro,normal);
+        verticiangoli.push_back({sottopol[j],angolo});
+    }
+    for (size_t i = 0; i<verticiangoli.size()-1;++i)
+    {
+        for (size_t j = 0; j<verticiangoli.size()-1;++j) {
+            if (verticiangoli[j].second > verticiangoli[j + 1].second) {
+                swap(verticiangoli[j], verticiangoli[j + 1]);
+            }
+        }
+    }
+    vector<Vector3d> verticiordinati;
+    for (const auto& vertice : verticiangoli) {
+        verticiordinati.push_back(vertice.first);
+    }
+    return verticiordinati;
+}
 }
 
 namespace OutputFileTools {
@@ -549,8 +585,6 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
             unsigned int n = sottopoligoni.size();
             // copia = sottopoligoni;
             // Cicla su tutti gli attuali sottopoligoni
-            // vector<Vector3d> currentpolygon;
-            // vector<Vector3d> traceverts;
             for (unsigned int i = 0; i < n; ++i) {
                 currentpolygon = sottopoligoni[i];
                 traceverts = traces.TracesExtremesCoord[id_t];
@@ -638,16 +672,43 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
                 // cout << endl;
 
                 // Divide in due sottopoligoni
-
+                vector<Vector3d> sottopol1;
+                vector<Vector3d> sottopol2;
+                sottopol1.push_back(newvertices[0]);
+                sottopol1.push_back(newvertices[1]);
+                sottopol2.push_back(newvertices[0]);
+                sottopol2.push_back(newvertices[1]);
+                for (size_t l = 0; l< currentpolygon.size(); ++l ) {
+                    if(((newvertices[0]-currentpolygon[l]).cross(newvertices[1]-currentpolygon[l])).dot(fractures.Normals[id])>0) {
+                        sottopol1.push_back(currentpolygon[l]);
+                    }
+                    else{
+                        sottopol2.push_back(currentpolygon[l]);
+                    }
+                }
+                sottopol1 = antiorario(sottopol1, fractures.Normals[id]);
+                sottopol2 = antiorario(sottopol2, fractures.Normals[id]);
+                cout << "sottopol1 di id " << id << endl;
+                for (size_t p = 0; p<sottopol1.size();++p){
+                    cout << sottopol1[p].transpose() << " ;";
+                }
+                cout << endl;
+                cout << "sottopol2 di id " << id << endl;
+                for (size_t p = 0; p<sottopol2.size();++p){
+                    cout << sottopol2[p].transpose() << " ;";
+                }
+                cout << endl;
 
                 // Memorizza i sottopoligoni in copia
-
+                copia.push_back(sottopol1);
+                copia.push_back(sottopol2);
             }
             sottopoligoni = copia;
             copia.clear();
         }
-
         // Popola mesh
+
+
         idtraces.clear();
         sottopoligoni.clear();
     }

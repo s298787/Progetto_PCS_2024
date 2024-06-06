@@ -23,7 +23,8 @@ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
                          const Vector3d& point1, const Vector3d& dir1, Vector3d& inter); //funzione che trova il punto di intersezione retta-segmento
 bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control); //funzione che trova il punto di intersezione semiretta-segmento
-
+double calcolangolo(const Vector3d& v1, const Vector3d& v2, const Vector3d& normal);
+vector<Vector3d> antiorario(const vector<Vector3d>& sottopol, const Vector3d& normal); //funzione che memorizza i vertici in senso antiorario
 }
 
 namespace OutputFileTools {
