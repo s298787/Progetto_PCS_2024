@@ -18,7 +18,7 @@ int main()
 {
     Fractures dfn;
     Traces traces;
-    PolygonalMesh mesh;
+    vector<PolygonalMesh> mesh;
     string filename = "/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR3_data.txt";
     if(importdfn(filename, dfn))
     {

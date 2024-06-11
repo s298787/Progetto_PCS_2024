@@ -18,7 +18,7 @@ struct PolygonalMesh {
 
     unsigned int NumberCell2d; // Numero di celle 2d
     vector<unsigned int> IdCell2d; // Array di id delle celle 2d
-    vector<vector<unsigned int>> IdVerticesCell2d; // // Array con gli id dei vertici delle celle 2d
-    vector<vector<unsigned int>> IdEdgesCell2d; // // Array con gli id dei lati delle celle 2d
+    vector<vector<unsigned int>> IdVerticesCell2d; // Array con gli id dei vertici delle celle 2d
+    vector<vector<unsigned int>> IdEdgesCell2d; // Array con gli id dei lati delle celle 2d
 };
 }

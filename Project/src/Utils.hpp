@@ -36,5 +36,5 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
 // Parte 2
 namespace MeshLibrary {
 using namespace Polygons;
-void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& mesh); //funzione che calcola la mesh
+void meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh); //funzione che calcola la mesh
 }

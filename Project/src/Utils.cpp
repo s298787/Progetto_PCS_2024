@@ -543,7 +543,7 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
 namespace MeshLibrary {
 using namespace Polygons;
 using namespace Analytics;
-void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& mesh)
+void meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh)
 {
     vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
     vector<Vector3d> fracture;
@@ -654,12 +654,12 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
                 vector<Vector3d> newvertices;
                 for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
                     if (intersectrettaretta(traceverts[0], traceverts[1]-traceverts[0], currentpolygon[j],
-                                            currentpolygon[j+1] - currentpolygon[j], inter)) {
+                        currentpolygon[j+1] - currentpolygon[j], inter)) {
                         newvertices.push_back(inter);
                     }
                 }
                 if (intersectrettaretta(traceverts[0], traceverts[1]-traceverts[0], currentpolygon[currentpolygon.size()-1],
-                                        currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
+                    currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
                     newvertices.push_back(inter);
                 }
                 // cout << id_t << ": " << endl;
@@ -707,7 +707,83 @@ void meshcalc(const Traces& traces, const Fractures& fractures, PolygonalMesh& m
             copia.clear();
         }
         // Popola mesh
+        PolygonalMesh fracturemesh;
+        unsigned int id0d = 0;
+        for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
+            for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j)  {
+                if (find(fracturemesh.CoordCell0d.begin(), fracturemesh.CoordCell0d.end(), sottopoligoni[n][j]) == fracturemesh.CoordCell0d.end()) {
+                    fracturemesh.CoordCell0d.push_back(sottopoligoni[n][j]);
+                    fracturemesh.IdCell0d.push_back(id0d);
+                    id0d++;
+                }
+            }
+        }
+        fracturemesh.NumberCell0d = fracturemesh.IdCell0d.size();
 
+        unsigned int id1d = 0;
+        for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
+            for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j) {
+                for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
+                    if (fracturemesh.CoordCell0d[p] == sottopoligoni[n][j]) {
+                        for (unsigned int q = 0; q < fracturemesh.CoordCell0d.size(); ++q) {
+                            if (fracturemesh.CoordCell0d[q] == sottopoligoni[n][j+1]) {
+                                vector<unsigned int> lato1 = {fracturemesh.IdCell0d[p],fracturemesh.IdCell0d[q]};
+                                vector<unsigned int> lato2 = {fracturemesh.IdCell0d[q],fracturemesh.IdCell0d[p]};
+                                if (find(fracturemesh.IdVerticesCell1d.begin(), fracturemesh.IdVerticesCell1d.end(), lato1) == fracturemesh.IdVerticesCell1d.end() &&
+                                    find(fracturemesh.IdVerticesCell1d.begin(), fracturemesh.IdVerticesCell1d.end(), lato2) == fracturemesh.IdVerticesCell1d.end()) {
+                                    fracturemesh.IdVerticesCell1d.push_back(lato1);
+                                    fracturemesh.IdCell1d.push_back(id1d);
+                                    id1d++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        fracturemesh.NumberCell1d = fracturemesh.IdCell1d.size();
+
+        fracturemesh.NumberCell2d = sottopoligoni.size();
+        fracturemesh.IdCell2d.reserve(sottopoligoni.size());
+        fracturemesh.IdVerticesCell2d.resize(sottopoligoni.size());
+        for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
+            fracturemesh.IdCell2d.push_back(n);
+            for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j) {
+                for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
+                    if (fracturemesh.CoordCell0d[p] == sottopoligoni[n][j]) {
+                        fracturemesh.IdVerticesCell2d[n].push_back(fracturemesh.IdCell0d[p]);
+                    }
+                }
+            }
+        }
+
+        cout << "Il numero di celle 0d è: " << fracturemesh.NumberCell0d << endl;
+        for (unsigned int n = 0; n < fracturemesh.NumberCell0d; ++n) {
+            cout << "Id cella 0d - " << fracturemesh.IdCell0d[n] << "; ";
+        }
+        cout << endl;
+
+        cout << "Il numero di celle 1d è: " << fracturemesh.NumberCell1d << endl;
+        for (unsigned int n = 0; n < fracturemesh.NumberCell1d; ++n) {
+            cout << "Id cella 1d - " << fracturemesh.IdCell1d[n] << ": ";
+            for (unsigned int j = 0; j < 2; ++j) {
+                cout << fracturemesh.IdVerticesCell1d[n][j] << "; ";
+            }
+            cout << endl;
+        }
+
+        cout << "Il numero di celle 2d è: " << fracturemesh.NumberCell2d << endl;
+        for (unsigned int n = 0; n < fracturemesh.NumberCell2d; ++n) {
+            cout << "Id cella 2d - " << fracturemesh.IdCell2d[n] << ": ";
+            for (unsigned int j = 0; j < fracturemesh.IdVerticesCell2d[n].size(); ++j) {
+                cout << fracturemesh.IdVerticesCell2d[n][j] << "; ";
+            }
+            cout << endl;
+        }
+
+        cout << endl;
+
+        mesh.push_back(fracturemesh);
 
         idtraces.clear();
         sottopoligoni.clear();
