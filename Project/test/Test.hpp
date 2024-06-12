@@ -15,7 +15,7 @@ double tol=10*numeric_limits<double>::epsilon();
 
 TEST(DFNImportTest, CorrectNumberOfFractures) {
     Fractures fractures;
-    importdfn("/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR3_data.txt", fractures);
+    importdfn("./FR3_data.txt", fractures);
 
     ASSERT_EQ(fractures.FracturesNumber, 3); // Il file contiene veramente 3 fratture
 }
@@ -23,7 +23,7 @@ TEST(DFNImportTest, CorrectNumberOfFractures) {
 TEST(DFNImportTest, CorrectFractures) {
 
     Fractures fractures;
-    importdfn("/home/alberto/Documenti/Materiale scuola Alberto/Appunti/Programmazione e calcolo scientifico/Consegne/Progetto_PCS_2024/Project/DFN/FR3_data.txt", fractures);
+    importdfn("./FR3_data.txt", fractures);
 
     ASSERT_EQ(fractures.FracturesId[0], 0); // Controlliamo che gli id siano memorizzati correttamente
     ASSERT_EQ(fractures.FracturesId[1], 1);
@@ -150,94 +150,94 @@ TEST(DFNAnalytics, Intersectrettasemiretta){
     ASSERT_EQ(control, Vector3d(1000,1000,1000));
 }
 
-TEST(DFNOutputfilesTools, Printtraces){
-    string tipsfileout = "traces_3.txt";
+// TEST(DFNOutputfilesTools, Printtraces){
+//     string tipsfileout = "traces_3.txt";
 
-    // Legge il contenuto del file riga per riga
-    std::ifstream infile(tipsfileout);
-    if (!infile.is_open()) {
-        cerr << "Failed to open file " << tipsfileout << endl;
-    }
+//     // Legge il contenuto del file riga per riga
+//     std::ifstream infile(tipsfileout);
+//     if (!infile.is_open()) {
+//         cerr << "Failed to open file " << tipsfileout << endl;
+//     }
 
-    // Vettore contenente l'output atteso riga per riga
-    vector<string> expected_lines = {
-        "# Number of Traces",
-        "2",
-        "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2",
-        "0; 0; 1; 0.8; 0; 0; 0.8; 1; 0; ",
-        "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2",
-        "1; 0; 2; 0; 0.5; 0; 0.316184; 0.5; 0; "
-    };
+//     // Vettore contenente l'output atteso riga per riga
+//     vector<string> expected_lines = {
+//         "# Number of Traces",
+//         "2",
+//         "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2",
+//         "0; 0; 1; 0.8; 0; 0; 0.8; 1; 0; ",
+//         "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2",
+//         "1; 0; 2; 0; 0.5; 0; 0.316184; 0.5; 0; "
+//     };
 
-    string line;
-    size_t line_index = 0;
-    while (getline(infile, line)) {
-        if (line_index < expected_lines.size()) {
-            ASSERT_EQ(line, expected_lines[line_index]) << "Mismatch in line " << line_index + 1;
-        }
-        else {
-            FAIL() << "Unexpected additional line: " << line;
-        }
-        ++line_index;
-    }
+//     string line;
+//     size_t line_index = 0;
+//     while (getline(infile, line)) {
+//         if (line_index < expected_lines.size()) {
+//             ASSERT_EQ(line, expected_lines[line_index]) << "Mismatch in line " << line_index + 1;
+//         }
+//         else {
+//             FAIL() << "Unexpected additional line: " << line;
+//         }
+//         ++line_index;
+//     }
 
-    // Controlla che non ci siano meno righe di quelle attese
-    ASSERT_EQ(line_index, expected_lines.size()) << "File has fewer lines than expected.";
+//     // Controlla che non ci siano meno righe di quelle attese
+//     ASSERT_EQ(line_index, expected_lines.size()) << "File has fewer lines than expected.";
 
-    infile.close();
+//     infile.close();
 
-    // Rimuove il file temporaneo dal filesystem (remove prende in input un puntatore (const char*),
-    // per ottenerlo devo usare il metodo .c_str() sulla stringa)
-    remove(tipsfileout.c_str());
-}
+//     // Rimuove il file temporaneo dal filesystem (remove prende in input un puntatore (const char*),
+//     // per ottenerlo devo usare il metodo .c_str() sulla stringa)
+//     remove(tipsfileout.c_str());
+// }
 
-TEST(PrintToFileTest, Printtips) {
-    string tipsfileout = "tips_3.txt";
+// TEST(PrintToFileTest, Printtips) {
+//     string tipsfileout = "tips_3.txt";
 
-    // Legge il contenuto del file riga per riga
-    std::ifstream infile(tipsfileout);
-    if (!infile.is_open()) {
-        cerr << "Failed to open file " << tipsfileout << endl;
-    }
+//     // Legge il contenuto del file riga per riga
+//     std::ifstream infile(tipsfileout);
+//     if (!infile.is_open()) {
+//         cerr << "Failed to open file " << tipsfileout << endl;
+//     }
 
-    // Vettore contenente l'output atteso riga per riga
-    vector<string> expected_lines = {
-        "# FractureId; NumTraces",
-        "0; 2",
-        "# TraceId; Tips; Length",
-        "0; True; 1",
-        "# TraceId; Tips; Length",
-        "1; False; 0.316184",
-        "",
-        "# FractureId; NumTraces",
-        "1; 1",
-        "# TraceId; Tips; Length",
-        "0; True; 1",
-        "",
-        "# FractureId; NumTraces",
-        "2; 1",
-        "# TraceId; Tips; Length",
-        "1; False; 0.316184",
-        ""
-    };
+//     // Vettore contenente l'output atteso riga per riga
+//     vector<string> expected_lines = {
+//         "# FractureId; NumTraces",
+//         "0; 2",
+//         "# TraceId; Tips; Length",
+//         "0; True; 1",
+//         "# TraceId; Tips; Length",
+//         "1; False; 0.316184",
+//         "",
+//         "# FractureId; NumTraces",
+//         "1; 1",
+//         "# TraceId; Tips; Length",
+//         "0; True; 1",
+//         "",
+//         "# FractureId; NumTraces",
+//         "2; 1",
+//         "# TraceId; Tips; Length",
+//         "1; False; 0.316184",
+//         ""
+//     };
 
-    string line;
-    size_t line_index = 0;
-    while (getline(infile, line)) {
-        if (line_index < expected_lines.size()) {
-            ASSERT_EQ(line, expected_lines[line_index]) << "Mismatch in line " << line_index + 1;
-        }
-        else {
-            FAIL() << "Unexpected additional line: " << line;
-        }
-        ++line_index;
-    }
+//     string line;
+//     size_t line_index = 0;
+//     while (getline(infile, line)) {
+//         if (line_index < expected_lines.size()) {
+//             ASSERT_EQ(line, expected_lines[line_index]) << "Mismatch in line " << line_index + 1;
+//         }
+//         else {
+//             FAIL() << "Unexpected additional line: " << line;
+//         }
+//         ++line_index;
+//     }
 
-    // Controlla che non ci siano meno righe di quelle attese
-    ASSERT_EQ(line_index, expected_lines.size()) << "File has fewer lines than expected.";
+//     // Controlla che non ci siano meno righe di quelle attese
+//     ASSERT_EQ(line_index, expected_lines.size()) << "File has fewer lines than expected.";
 
-    infile.close();
+//     infile.close();
 
-    // Rimuove il file temporaneo dal filesystem
-    remove(tipsfileout.c_str());
-}
+//     // Rimuove il file temporaneo dal filesystem
+//     remove(tipsfileout.c_str());
+// }

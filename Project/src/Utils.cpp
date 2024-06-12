@@ -545,7 +545,6 @@ using namespace Polygons;
 using namespace Analytics;
 void meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh)
 {
-
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
         vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
         vector<Vector3d> fracture = fractures.CoordVertices[id];
@@ -577,10 +576,10 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         // vector<Vector3d> currentpolygon;
         // vector<Vector3d> traceverts;
         for (const unsigned int& id_t : idtraces) {
-            unsigned int n = sottopoligoni.size();
+            // unsigned int n = sottopoligoni.size();
             vector<vector<Vector3d>> copia; // Array copia di sottopoligoni
             // Cicla su tutti gli attuali sottopoligoni
-            for (unsigned int i = 0; i < n; ++i) {
+            for (size_t i = 0; i < sottopoligoni.size(); ++i) {
                 vector<Vector3d> currentpolygon = sottopoligoni[i];
                 vector<Vector3d> traceverts = traces.TracesExtremesCoord[id_t];
                 Vector3d inter;
@@ -588,66 +587,76 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 // Usiamo il ray-casting sugli estremi della traccia
                 bool raycasting = false;
                 Vector3d direction;
-                for (const Vector3d& vert : traceverts) {
+                for (size_t k = 0; k < traceverts.size(); ++k) {
+                    Vector3d vert = traceverts[k];
                     unsigned int countraycasting = 0;
                     if (!raycasting) {
-                        direction = currentpolygon[0] - vert;
+                        direction = traceverts[1 - k] - vert;
                         for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
                             if (intersectrettasemiretta(vert, direction, currentpolygon[j],
-                                                        currentpolygon[j+1] - currentpolygon[j], inter)) {
-                                countraycasting++;
+                                                        currentpolygon[j+1] - currentpolygon[j], inter)) {                                
                                 if (inter == vert) {
                                     raycasting = true;
-                                    continue;
+                                    break;
                                 }
+                                countraycasting++;
                             }
+                        }
+                        if (raycasting) {
+                            break;
                         }
                         if (intersectrettasemiretta(vert, direction, currentpolygon[currentpolygon.size()-1],
                                                     currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
-                            countraycasting++;
                             if (inter == vert) {
                                 raycasting = true;
-                                continue;
+                                break;
                             }
+                            countraycasting++;
                         }
                         if (countraycasting == 1) {
                             raycasting = true;
+                            break;
                         }
                     }
                 }
                 // Vediamo se la traccia interseca due segmenti di currentpolygon
                 bool doubleintersections = false;
-                if (!raycasting) {
-                    unsigned int countdoubleintersections = 0;
-                    Vector3d vert = traceverts[0];
-                    direction = traceverts[1] - traceverts[0];
-                    // Controlla se la retta della traccia interseca il lato e poi verifica
-                    // se l'intersezione è interna alla traccia
-                    for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
-                        if (intersectrettaretta(vert, direction, currentpolygon[j],
-                                                currentpolygon[j+1] - currentpolygon[j], inter)) {
-                            if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
-                                distance(traceverts[0], traceverts[1]) <= 1e-6) {
-                                countdoubleintersections++;
-                            }
-                        }
-                    }
-                    if (intersectrettaretta(vert, direction, currentpolygon[currentpolygon.size()-1],
-                                            currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
+                // if (!raycasting) {
+                unsigned int countdoubleintersections = 0;
+                Vector3d vert = traceverts[0];
+                direction = traceverts[1] - traceverts[0];
+                // Controlla se la retta della traccia interseca il lato e poi verifica
+                // se l'intersezione è interna alla traccia
+                for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
+                    if (intersectrettaretta(vert, direction, currentpolygon[j],
+                                            currentpolygon[j+1] - currentpolygon[j], inter)) {
                         if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
                             distance(traceverts[0], traceverts[1]) <= 1e-6) {
                             countdoubleintersections++;
                         }
                     }
-                    if (countdoubleintersections == 2) {
-                        doubleintersections = true;
+                }
+                if (intersectrettaretta(vert, direction, currentpolygon[currentpolygon.size()-1],
+                                        currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
+                    if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
+                        distance(traceverts[0], traceverts[1]) <= 1e-6) {
+                        countdoubleintersections++;
                     }
                 }
+                if (countdoubleintersections == 2) {
+                    doubleintersections = true;
+                }
+                // }
+                cout << "Id frattura: " << id << "; Id traccia: " << id_t << "; raycasting: " << raycasting << "; doubleintersections: " << doubleintersections << endl;
                 // Se nessuna delle condizioni è soddisfatta, salta il sottopoligono corrente
+                cout << copia.size() << endl;
                 if (!raycasting && !doubleintersections) {
                     copia.push_back(currentpolygon);
+                    cout << "non ciao" << endl;
+                    cout << copia.size() << endl;
                     continue;
                 }
+                cout << "ciao" << endl;
 
                 // Calcola le intersezioni
                 vector<Vector3d> newvertices;
@@ -655,12 +664,15 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     if (intersectrettaretta(traceverts[0], traceverts[1]-traceverts[0], currentpolygon[j],
                         currentpolygon[j+1] - currentpolygon[j], inter)) {
                         newvertices.push_back(inter);
+                        cout << "Inter found: " << inter.transpose() << endl;
                     }
                 }
                 if (intersectrettaretta(traceverts[0], traceverts[1]-traceverts[0], currentpolygon[currentpolygon.size()-1],
                     currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
                     newvertices.push_back(inter);
+                    cout << "Inter found: " << inter.transpose() << endl;
                 }
+
                 // cout << id_t << ": " << endl;
                 // for (size_t k = 0; k < newvertices.size(); ++k) {
                 //     for (unsigned int j = 0; j < 3; ++j) {
@@ -670,15 +682,14 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 // }
                 // cout << endl;
 
-                if (!newvertices.empty()) { // Questo controllo è ridondante poiché abbiamo già controllato se le intersezioni esistono
-                    // Divide in due sottopoligoni
+                if (newvertices.size() == 2) {
                     vector<Vector3d> sottopol1;
                     vector<Vector3d> sottopol2;
                     sottopol1.push_back(newvertices[0]);
                     sottopol1.push_back(newvertices[1]);
                     sottopol2.push_back(newvertices[0]);
                     sottopol2.push_back(newvertices[1]);
-                    for (size_t l = 0; l< currentpolygon.size(); ++l ) {
+                    for (size_t l = 0; l< currentpolygon.size(); ++l) {
                         if(((newvertices[0]-currentpolygon[l]).cross(newvertices[1]-currentpolygon[l])).dot(fractures.Normals[id])>0) {
                             sottopol1.push_back(currentpolygon[l]);
                         }
@@ -703,9 +714,13 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
                 }
+                else {
+                    copia.push_back(currentpolygon);
+                }
+                cout << copia.size() << endl;
             }
             sottopoligoni = copia; // Memorizza copia in sottopoligoni
-            copia.clear(); // Svuota copia
+            // copia.clear(); // Svuota copia
         }
         // Popola mesh
         PolygonalMesh fracturemesh;
@@ -760,6 +775,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
 
         cout << "Id frattura: " << id << endl;
         cout << "Numero sottopoligoni: " << sottopoligoni.size() << endl;
+        cout << "Numero tracce: " << idtraces.size() << endl;
 
         cout << "Il numero di celle 0d è: " << fracturemesh.NumberCell0d << endl;
         for (unsigned int n = 0; n < fracturemesh.NumberCell0d; ++n) {
