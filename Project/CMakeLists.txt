@@ -40,17 +40,27 @@ list(APPEND DFN_LINKED_LIBRARIES PRIVATE GTest::gmock_main)
 ################################################################################
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(TestingParaview/Code/src)
 
 list(APPEND DFN_SOURCES ${DFN_sources})
 list(APPEND DFN_HEADERS ${DFN_headers})
 list(APPEND DFN_INCLUDE ${DFN_includes})
 
+list(APPEND DFN_SOURCES ${src_paraview_sources})
+list(APPEND DFN_SOURCES ${src_paraview_headers})
+list(APPEND DFN_SOURCES ${src_paraview_includes})
+
 # Create executable
 ################################################################################
-add_executable(${PROJECT_NAME}
-	main.cpp
-	${DFN_SOURCES}
-    ${DFN_HEADERS})
+# add_executable(${PROJECT_NAME}
+#	main.cpp
+#	${DFN_SOURCES}
+#    ${DFN_HEADERS})
+
+add_executable(${CMAKE_PROJECT_NAME} main.cpp
+    ${${CMAKE_PROJECT_NAME}_sources}
+    ${${CMAKE_PROJECT_NAME}_headers}
+)
 
 target_link_libraries(${PROJECT_NAME} ${DFN_LINKED_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${DFN_INCLUDE})
