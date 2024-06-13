@@ -689,7 +689,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 }
 
                 // Elimina gli elementi ripetuti in newvertices
-                for (size_t t = 0; t < newvertices.size(); ++t) {
+                for (size_t t = 0; t < newvertices.size()-1; ++t) {
                     for (size_t j = t + 1; j < newvertices.size(); ++j) {
                         if (distance(newvertices[t], newvertices[j]) < 1e-6) {
                             newvertices.erase(newvertices.begin()+j);
@@ -742,6 +742,41 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     // Memorizza i sottopoligoni in copia
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
+
+                    for (const Vector3d& vertex : newvertices) {
+                        for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
+                            for (size_t tr = 0; tr < idtraces.size(); ++tr) {
+                                if (tr != id_t) {
+                                    traceverts = traces.TracesExtremesCoord[tr];
+                                    if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
+                                            -distance(traceverts[0], traceverts[1])) <= 1e-6) {
+                                        if (sottopoligoni[cp] != currentpolygon) {
+                                            bool vertexadded = false;
+                                            for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
+                                                if (abs(distance(vertex, sottopoligoni[cp][l])+distance(vertex, sottopoligoni[cp][l+1])
+                                                        -distance(sottopoligoni[cp][l], sottopoligoni[cp][l+1])) >= 1e-6) {
+                                                    if (!vertexadded) {
+                                                        sottopoligoni[cp].push_back(vertex);
+                                                        vertexadded = true;
+                                                    }
+                                                }
+                                            }
+                                            if (abs(distance(vertex, sottopoligoni[cp][sottopoligoni[cp].size()])+distance(vertex, sottopoligoni[cp][0])
+                                                    -distance(sottopoligoni[cp][sottopoligoni[cp].size()], sottopoligoni[cp][0])) >= 1e-6) {
+                                                if (!vertexadded) {
+                                                    sottopoligoni[cp].push_back(vertex);
+                                                    vertexadded = true;
+                                                }
+                                            }
+                                            if (vertexadded) {
+                                                sottopoligoni[cp] = antiorario(sottopoligoni[cp], fractures.Normals[id]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 else {
                     copia.push_back(currentpolygon);
@@ -753,12 +788,19 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         }
         // Elimina gli elementi ripetuti in sottopoligoni
         for (size_t t = 0; t < sottopoligoni.size(); ++t) {
-            for (size_t n = 0; n < sottopoligoni[t].size(); ++n) {
+            for (size_t n = 0; n < sottopoligoni[t].size()-1; ++n) {
                 for (size_t j = n + 1; j < sottopoligoni[t].size(); ++j) {
                     if (distance(sottopoligoni[t][n], sottopoligoni[t][j]) < 1e-6) {
                         sottopoligoni[t].erase(sottopoligoni[t].begin()+j);
                     }
                 }
+            }
+        }
+
+        for (size_t t = 0; t < sottopoligoni.size(); ++t) {
+            cout << "Sottopoligono numero " << t << ": " << endl;
+            for (size_t n = 0; n < sottopoligoni[t].size(); ++n) {
+                cout << sottopoligoni[t][n].transpose() << endl;
             }
         }
 
