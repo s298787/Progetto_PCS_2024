@@ -19,7 +19,7 @@ int main()
     Fractures dfn;
     Traces traces;
     vector<PolygonalMesh> mesh;
-    string filename = "./FR10_data.txt";
+    string filename = "./FR2_data.txt";
     if(importdfn(filename, dfn))
     {
         cout << "File " << filename << " read" << endl;
