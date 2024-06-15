@@ -1,7 +1,7 @@
-list(APPEND DFN_headers ${CMAKE_CURRENT_SOURCE_DIR}/Test.hpp)
+list(APPEND src_test_headers ${CMAKE_CURRENT_SOURCE_DIR}/Test.hpp)
 
-list(APPEND DFN_includes ${CMAKE_CURRENT_SOURCE_DIR})
+list(APPEND src_test_includes ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(DFN_sources ${DFN_sources} PARENT_SCOPE)
-set(DFN_headers ${DFN_headers} PARENT_SCOPE)
-set(DFN_includes ${DFN_includes} PARENT_SCOPE)
+set(src_test_sources ${src_test_sources} PARENT_SCOPE)
+set(src_test_headers ${src_test_headers} PARENT_SCOPE)
+set(src_test_includes ${src_test_includes} PARENT_SCOPE)

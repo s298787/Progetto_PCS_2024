@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <sstream>
 
 using namespace std;
 using namespace Eigen;
@@ -14,50 +15,46 @@ using namespace Analytics;
 using namespace OutputFileTools;
 using namespace MeshLibrary;
 
-int main()
+int main(int argc, char** argv)
 {
+
+    string filename = "";
+    double epsilon = 10*numeric_limits<double>::epsilon();
+    if(argc == 1)
+        cerr << "Not file" << endl;
+    else if (argc == 3)
+    {
+        istringstream str(argv[1]);
+        str >> filename;
+
+        istringstream strTol(argv[2]);
+        double tol;
+        strTol >> tol;
+        epsilon = max(epsilon, tol);
+    }
+
     Fractures dfn;
     Traces traces;
     vector<PolygonalMesh> mesh;
-    string filename = "./FR3_data.txt";
+    // string filename = "./FR10_data.txt";
+
+    //Parte 1
+    // Lettura file input
     if(importdfn(filename, dfn))
     {
         cout << "File " << filename << " read" << endl;
     }
+    if(dfn.CoordVertices.empty())
+    {
+        cout << "dfn è vuoto" << endl;
+    }
 
-    // if(dfn.CoordVertices.empty())
-    // {
-    //     cout << "dfn è vuoto" << endl;
-    // }
-    // for (vector<Vector3d> matrix : dfn.CoordVertices)
-    // {
-    //     for (Vector3d coord : matrix)
-    //     {
-    //         for(unsigned int i = 0; i<3; ++i)
-    //         {
-    //             cout << coord(i) << ";";
-    //         }
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // Calcola tracce
 
-    double epsilon = 10*numeric_limits<double>::epsilon();
     list<vector<unsigned int>> goodcouples = checkspheres(dfn);
     tracesfinder(dfn, goodcouples, traces, epsilon);
-    // for (size_t i = 0; i < traces.TracesId.size(); ++i)
-    // {
-    //     cout << traces.TracesId[i] << ": " << traces.TracesFracturesId[i][0] << "&" << traces.TracesFracturesId[i][1] << endl;
-    //     cout << traces.TracesExtremesCoord[i][0].transpose() << " ; " << traces.TracesExtremesCoord[i][1].transpose() << endl;
-    // }
-    // cout << "Passanti: " << endl;
-    // for (size_t i = 0; i < traces.TipsTrue.size(); ++i) {
-    //     cout << traces.TipsTrue[i][0] << " passa per " << traces.TipsTrue[i][1] << endl;
-    // }
-    // cout << "Non passanti: " << endl;
-    // for (size_t i = 0; i < traces.TipsFalse.size(); ++i) {
-    //     cout << traces.TipsFalse[i][0] << " non passa per " << traces.TipsFalse[i][1] << endl;
-    // }
+
+    // Scrittura file output
     string tracesfileout = "traces_" + to_string(dfn.FracturesNumber) + ".txt";
     if(printtraces(tracesfileout, traces)) {
         cout << "File " << tracesfileout << " written successfully" << endl;
@@ -66,6 +63,10 @@ int main()
     if(printtips(tipsfileout, traces, dfn)) {
         cout << "File " << tipsfileout << " written successfully" << endl;
     }
+
+
+    // Parte 2
+    // Calcola mesh
     meshcalc(traces, dfn, mesh);
     return 0;
 }
