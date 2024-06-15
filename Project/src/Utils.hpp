@@ -33,11 +33,6 @@ bool printtraces(const string& tracesfileout, const Traces& traces); //funzione 
 bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fractures); //funzione che stampa su file le tracce divise in passanti e non
 }
 
-namespace Sorting{
-using namespace Polygons;
-bool SortingTracesLengths (const unsigned int id1, const unsigned int id2, Traces& traces);
-}
-
 // Parte 2
 namespace MeshLibrary {
 using namespace Polygons;

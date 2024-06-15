@@ -1,0 +1,14 @@
+size_t rem_size = traces.TracesNumber;
+    size_t last_seen = rem_size;
+    bool swapped = true;
+    while (swapped) {
+        swapped = false;
+        for (size_t i = 1; i < rem_size; i++) {
+            if (traces.TracesLengths[traces.TracesId[i-1]] < traces.TracesLengths[traces.TracesId[i]]) {
+                swap(traces.TracesId[i-1], traces.TracesId[i]);
+                swapped = true;
+                last_seen = i;
+            }
+        }
+        rem_size = last_seen;
+    }

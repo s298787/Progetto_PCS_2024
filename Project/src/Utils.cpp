@@ -434,7 +434,6 @@ double calcolangolo(const Vector3d& v1, const Vector3d& v2, const Vector3d& norm
 }
 vector<Vector3d> antiorario(const vector<Vector3d>& sottopol, const Vector3d& normal)
 {
-
     Vector3d baricentro = {0,0,0};
     for (size_t k = 0; k < sottopol.size(); ++k) {
         baricentro += sottopol[k];
@@ -445,8 +444,7 @@ vector<Vector3d> antiorario(const vector<Vector3d>& sottopol, const Vector3d& no
         double angolo = calcolangolo(Vector3d(1,0,0),sottopol[j]-baricentro,normal);
         verticiangoli.push_back({sottopol[j],angolo});
     }
-    for (size_t i = 0; i<verticiangoli.size()-1;++i)
-    {
+    for (size_t i = 0; i<verticiangoli.size()-1;++i) {
         for (size_t j = 0; j<verticiangoli.size()-1;++j) {
             if (verticiangoli[j].second > verticiangoli[j + 1].second) {
                 swap(verticiangoli[j], verticiangoli[j + 1]);
@@ -490,21 +488,6 @@ bool printtraces(const string& tracesfileout, const Traces& traces)
 bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fractures)
 {
     // Ordina TracesId in base alla lunghezza delle tracce
-    // Sorting::mergeSort(traces.TracesId, traces.TracesLengths, 0, traces.TracesId.size());
-    // size_t rem_size = traces.TracesNumber;
-    // size_t last_seen = rem_size;
-    // bool swapped = true;
-    // while (swapped) {
-    //     swapped = false;
-    //     for (size_t i = 1; i < rem_size; i++) {
-    //         if (traces.TracesLengths[traces.TracesId[i-1]] < traces.TracesLengths[traces.TracesId[i]]) {
-    //             swap(traces.TracesId[i-1], traces.TracesId[i]);
-    //             swapped = true;
-    //             last_seen = i;
-    //         }
-    //     }
-    //     rem_size = last_seen;
-    // }
     vector<double>& len = traces.TracesLengths;
     sort(traces.TracesId.begin(), traces.TracesId.end(), [len]( unsigned int  a,  unsigned int  b)
          {
@@ -560,27 +543,13 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
 }
 }
 
-namespace Sorting{
-using namespace Polygons;
-bool SortingTracesLengths (const unsigned int id1, const unsigned int id2, Traces& traces) {
-    return (traces.TracesLengths[id1] < traces.TracesLengths[id2]);
-}
-// Traces copytraces(Traces& traces) {
-//     return traces;
-// }
-}
-
 // Parte 2
 namespace MeshLibrary {
 using namespace Polygons;
 using namespace Analytics;
 void meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh)
 {
-    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
-        vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
-        vector<Vector3d> fracture = fractures.CoordVertices[id];
-        sottopoligoni.push_back(fracture); // Inizializza sottopoligoni uguale alla frattura
-
+    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {                        
         // Crea un array di tracce della singola frattura
         vector<unsigned int> idtraces;
         vector<unsigned int> confronto;
@@ -601,12 +570,17 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
                 idtraces.push_back(id_tr);
             }
-        }
+        }                
+
+        vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
+        vector<Vector3d> fracture = fractures.CoordVertices[id];
+        sottopoligoni.reserve(pow(2, idtraces.size()));
+        sottopoligoni.push_back(fracture); // Inizializza sottopoligoni uguale alla frattura
 
         // Cicla su tutte le tracce della frattura (idtraces)
-        sottopoligoni.reserve(pow(2, idtraces.size()));
         for (const unsigned int& id_t : idtraces) {
             vector<vector<Vector3d>> copia; // Array copia di sottopoligoni
+            copia.reserve(2*sottopoligoni.size());
             // Cicla su tutti gli attuali sottopoligoni
             for (size_t i = 0; i < sottopoligoni.size(); ++i) {
                 vector<Vector3d> currentpolygon = sottopoligoni[i];
@@ -683,20 +657,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 if (!raycasting && !doubleintersections) {
                     copia.push_back(currentpolygon);                    
                     continue;
-                }
-
-                // Calcola le intersezioni
-                // vector<Vector3d> newvertices;
-                // for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
-                //     if (intersectrettaretta(traceverts[0], traceverts[1]-traceverts[0], currentpolygon[j],
-                //         currentpolygon[j+1] - currentpolygon[j], inter)) {
-                //         newvertices.push_back(inter);
-                //     }
-                // }
-                // if (intersectrettaretta(traceverts[0], traceverts[1]-traceverts[0], currentpolygon[currentpolygon.size()-1],
-                //     currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
-                //     newvertices.push_back(inter);
-                // }
+                }               
 
                 // Elimina gli elementi ripetuti in newvertices
                 for (size_t t = 0; t < newvertices.size()-1; ++t) {
@@ -707,23 +668,11 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     }
                 }
 
-                // cout << "Nuovi vertici: ";
-                // for (size_t t = 0; t < newvertices.size(); ++t) {
-                //     cout << newvertices[t].transpose() << endl;
-                // }
-
-                // cout << id_t << ": " << endl;
-                // for (size_t k = 0; k < newvertices.size(); ++k) {
-                //     for (unsigned int j = 0; j < 3; ++j) {
-                //         cout << newvertices[k](j) << "; ";
-                //     }
-                //     cout << "     ";
-                // }
-                // cout << endl;
-
                 if (newvertices.size() == 2) {
                     vector<Vector3d> sottopol1;
                     vector<Vector3d> sottopol2;
+                    sottopol1.reserve(currentpolygon.size()+1);
+                    sottopol2.reserve(currentpolygon.size()+1);
                     sottopol1.push_back(newvertices[0]);
                     sottopol1.push_back(newvertices[1]);
                     sottopol2.push_back(newvertices[0]);
@@ -738,28 +687,19 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     }
                     sottopol1 = antiorario(sottopol1, fractures.Normals[id]);
                     sottopol2 = antiorario(sottopol2, fractures.Normals[id]);
-                    // cout << "sottopol1 di id " << id << endl;
-                    // for (size_t p = 0; p<sottopol1.size();++p){
-                    //     cout << sottopol1[p].transpose() << " ;";
-                    // }
-                    // cout << endl;
-                    // cout << "sottopol2 di id " << id << endl;
-                    // for (size_t p = 0; p<sottopol2.size();++p){
-                    //     cout << sottopol2[p].transpose() << " ;";
-                    // }
-                    // cout << endl;
 
                     // Memorizza i sottopoligoni in copia
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
 
-                    for (const Vector3d& vertex : newvertices) {
-                        for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
-                            for (size_t tr = 0; tr < idtraces.size(); ++tr) {
-                                if (tr != id_t) {
-                                    traceverts = traces.TracesExtremesCoord[tr];
-                                    if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
-                                            -distance(traceverts[0], traceverts[1])) <= 1e-6) {
+                    // Se uno dei nuovi vertici si trova su un lato di un altro sottopoligono, lo aggiunge
+                    for (size_t tr = 0; tr < idtraces.size(); ++tr) {
+                        if (tr != id_t) {
+                            traceverts = traces.TracesExtremesCoord[tr];
+                            for (const Vector3d& vertex : newvertices) {
+                                if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
+                                        -distance(traceverts[0], traceverts[1])) <= 1e-6) {
+                                    for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
                                         if (sottopoligoni[cp] != currentpolygon) {
                                             bool vertexadded = false;
                                             for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
@@ -791,7 +731,6 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 else {
                     copia.push_back(currentpolygon);
                 }
-                // cout << copia.size() << endl;
             }
             sottopoligoni = copia; // Memorizza copia in sottopoligoni
             // copia.clear(); // Svuota copia
