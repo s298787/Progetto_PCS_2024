@@ -432,30 +432,18 @@ double calcolangolo(const Vector3d& v1, const Vector3d& v2, const Vector3d& norm
     }
     return angle;
 }
-vector<Vector3d> antiorario(const vector<Vector3d>& sottopol, const Vector3d& normal)
+void antiorario(vector<Vector3d>& sottopol, const Vector3d& normal)
 {
     Vector3d baricentro = {0,0,0};
     for (size_t k = 0; k < sottopol.size(); ++k) {
         baricentro += sottopol[k];
     }
     baricentro /= sottopol.size();
-    vector<pair<Vector3d, double>> verticiangoli;
-    for (size_t j=0; j<sottopol.size();++j) {
-        double angolo = calcolangolo(Vector3d(1,0,0),sottopol[j]-baricentro,normal);
-        verticiangoli.push_back({sottopol[j],angolo});
-    }
-    for (size_t i = 0; i<verticiangoli.size()-1;++i) {
-        for (size_t j = 0; j<verticiangoli.size()-1;++j) {
-            if (verticiangoli[j].second > verticiangoli[j + 1].second) {
-                swap(verticiangoli[j], verticiangoli[j + 1]);
-            }
-        }
-    }
-    vector<Vector3d> verticiordinati;
-    for (const auto& vertice : verticiangoli) {
-        verticiordinati.push_back(vertice.first);
-    }
-    return verticiordinati;
+    sort(sottopol.begin(), sottopol.end(), [baricentro, normal](Vector3d  a,  Vector3d  b)
+         {
+        return (calcolangolo(Vector3d(1,0,0),a-baricentro,normal) <
+                calcolangolo(Vector3d(1,0,0),b-baricentro,normal));
+         });
 }
 }
 
@@ -489,9 +477,19 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
 {
     // Ordina TracesId in base alla lunghezza delle tracce
     vector<double>& len = traces.TracesLengths;
-    sort(traces.TracesId.begin(), traces.TracesId.end(), [len]( unsigned int  a,  unsigned int  b)
+    // sort(traces.TracesId.begin(), traces.TracesId.end(), [len](unsigned int  a,  unsigned int  b)
+    //      {
+    //     return len[a] < len[b];
+    //      });
+
+    sort(traces.TipsTrue.begin(), traces.TipsTrue.end(), [len](vector<unsigned int> a, vector<unsigned int> b)
          {
-        return len[a] < len[b];
+        return len[a[0]] > len[b[0]];
+         });
+
+    sort(traces.TipsFalse.begin(), traces.TipsFalse.end(), [len](vector<unsigned int> a, vector<unsigned int> b)
+         {
+        return len[a[0]] > len[b[0]];
          });
 
     ofstream fileout(tipsfileout);
@@ -505,9 +503,17 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
     // Scorre gli id delle fratture
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {        
         // Verifica quali tracce passano per la frattura id e le memorizza in idtraces
-        for (size_t j = 0; j < traces.TracesNumber; ++j) {
-            id_t = traces.TracesId[j];
-            if (traces.TracesFracturesId[id_t][0] == id || traces.TracesFracturesId[id_t][1] == id) {
+        for (size_t j = 0; j < traces.TipsTrue.size(); ++j) {
+            id_t = traces.TipsTrue[j][0];
+            if (traces.TipsTrue[j][1] == id) {
+            // if (traces.TracesFracturesId[id_t][0] == id || traces.TracesFracturesId[id_t][1] == id) {
+                idtraces.push_back(id_t);
+            }
+        }
+        for (size_t j = 0; j < traces.TipsFalse.size(); ++j) {
+            id_t = traces.TipsFalse[j][0];
+            if (traces.TipsFalse[j][1] == id) {
+            // if (traces.TracesFracturesId[id_t][0] == id || traces.TracesFracturesId[id_t][1] == id) {
                 idtraces.push_back(id_t);
             }
         }
@@ -515,7 +521,7 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
         fileout << "# FractureId; NumTraces" << endl;
         fileout << id << "; " << idtraces.size() << endl;
 
-        // Stampa su file le informazioni sulle tracce passanti appartenenti a id
+        // Stampa su file le informazioni sulle tracce appartenenti a id
         for (size_t k = 0; k < idtraces.size(); ++k) {
             id_t = idtraces[k];
             confronto = {id_t, id};
@@ -524,17 +530,22 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
                 fileout << "# TraceId; Tips; Length" << endl;
                 fileout << id_t << "; " << "True" << "; " << traces.TracesLengths[id_t] << endl;
             }
-        }
-        // Stampa su file le informazioni sulle tracce non passanti appartenenti a id
-        for (size_t k = 0; k < idtraces.size(); ++k) {
-            id_t = idtraces[k];
-            confronto = {id_t, id};
             // Controlla se la coppia idtraccia - idfrattura è presente in TipsFalse e stampa
             if (find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
                 fileout << "# TraceId; Tips; Length" << endl;
                 fileout << id_t << "; " << "False" << "; " << traces.TracesLengths[id_t] << endl;
             }
         }
+        // // Stampa su file le informazioni sulle tracce non passanti appartenenti a id
+        // for (size_t k = 0; k < idtraces.size(); ++k) {
+        //     id_t = idtraces[k];
+        //     confronto = {id_t, id};
+        //     // Controlla se la coppia idtraccia - idfrattura è presente in TipsFalse e stampa
+            // if (find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
+            //     fileout << "# TraceId; Tips; Length" << endl;
+            //     fileout << id_t << "; " << "False" << "; " << traces.TracesLengths[id_t] << endl;
+            // }
+        // }
         fileout << endl;
         idtraces.clear(); // Svuota idtraces
     }
@@ -552,25 +563,38 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {                        
         // Crea un array di tracce della singola frattura
         vector<unsigned int> idtraces;
-        vector<unsigned int> confronto;
-        // Popola con le tracce passanti
-        for (unsigned int j = 0; j < traces.TracesNumber; ++j) {
-            unsigned int id_tr = traces.TracesId[j];
-            confronto = {id_tr, id};
-            if ((traces.TracesFracturesId[id_tr][0] == id || traces.TracesFracturesId[id_tr][1] == id) &&
-                find(traces.TipsTrue.begin(), traces.TipsTrue.end(), confronto) != traces.TipsTrue.end()) {
-                idtraces.push_back(id_tr);
+        // Verifica quali tracce passano per la frattura id e le memorizza in idtraces
+        for (size_t j = 0; j < traces.TipsTrue.size(); ++j) {
+            unsigned int id_t = traces.TipsTrue[j][0];
+            if (traces.TipsTrue[j][1] == id) {
+                idtraces.push_back(id_t);
             }
         }
-        // Popola con le tracce tracce non passanti
-        for (unsigned int j = 0; j < traces.TracesNumber; ++j) {
-            unsigned int id_tr = traces.TracesId[j];
-            confronto = {id_tr, id};
-            if ((traces.TracesFracturesId[id_tr][0] == id || traces.TracesFracturesId[id_tr][1] == id) &&
-                find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
-                idtraces.push_back(id_tr);
+        for (size_t j = 0; j < traces.TipsFalse.size(); ++j) {
+            unsigned int id_t = traces.TipsFalse[j][0];
+            if (traces.TipsFalse[j][1] == id) {
+                idtraces.push_back(id_t);
             }
-        }                
+        }
+        // // Popola con le tracce passanti
+        // vector<unsigned int> confronto;
+        // for (unsigned int j = 0; j < traces.TracesNumber; ++j) {
+        //     unsigned int id_tr = traces.TracesId[j];
+        //     confronto = {id_tr, id};
+        //     if ((traces.TracesFracturesId[id_tr][0] == id || traces.TracesFracturesId[id_tr][1] == id) &&
+        //         find(traces.TipsTrue.begin(), traces.TipsTrue.end(), confronto) != traces.TipsTrue.end()) {
+        //         idtraces.push_back(id_tr);
+        //     }
+        // }
+        // // Popola con le tracce tracce non passanti
+        // for (unsigned int j = 0; j < traces.TracesNumber; ++j) {
+        //     unsigned int id_tr = traces.TracesId[j];
+        //     confronto = {id_tr, id};
+        //     if ((traces.TracesFracturesId[id_tr][0] == id || traces.TracesFracturesId[id_tr][1] == id) &&
+        //         find(traces.TipsFalse.begin(), traces.TipsFalse.end(), confronto) != traces.TipsFalse.end()) {
+        //         idtraces.push_back(id_tr);
+        //     }
+        // }
 
         vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
         vector<Vector3d> fracture = fractures.CoordVertices[id];
@@ -685,55 +709,55 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                             sottopol2.push_back(currentpolygon[l]);
                         }
                     }
-                    sottopol1 = antiorario(sottopol1, fractures.Normals[id]);
-                    sottopol2 = antiorario(sottopol2, fractures.Normals[id]);
+                    antiorario(sottopol1, fractures.Normals[id]);
+                    antiorario(sottopol2, fractures.Normals[id]);
 
                     // Memorizza i sottopoligoni in copia
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
 
                     // Se uno dei nuovi vertici si trova su un lato di un altro sottopoligono, lo aggiunge
-                    for (size_t tr = 0; tr < idtraces.size(); ++tr) {
-                        if (tr != id_t) {
-                            traceverts = traces.TracesExtremesCoord[tr];
-                            for (const Vector3d& vertex : newvertices) {
-                                if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
-                                        -distance(traceverts[0], traceverts[1])) <= 1e-6) {
-                                    for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
-                                        if (sottopoligoni[cp] != currentpolygon) {
-                                            bool vertexadded = false;
-                                            for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
-                                                if (abs(distance(vertex, sottopoligoni[cp][l])+distance(vertex, sottopoligoni[cp][l+1])
-                                                        -distance(sottopoligoni[cp][l], sottopoligoni[cp][l+1])) >= 1e-6) {
-                                                    if (!vertexadded) {
-                                                        sottopoligoni[cp].push_back(vertex);
-                                                        vertexadded = true;
-                                                    }
-                                                }
-                                            }
-                                            if (abs(distance(vertex, sottopoligoni[cp][sottopoligoni[cp].size()])+distance(vertex, sottopoligoni[cp][0])
-                                                    -distance(sottopoligoni[cp][sottopoligoni[cp].size()], sottopoligoni[cp][0])) >= 1e-6) {
-                                                if (!vertexadded) {
-                                                    sottopoligoni[cp].push_back(vertex);
-                                                    vertexadded = true;
-                                                }
-                                            }
-                                            if (vertexadded) {
-                                                sottopoligoni[cp] = antiorario(sottopoligoni[cp], fractures.Normals[id]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // for (size_t tr = 0; tr < idtraces.size(); ++tr) {
+                    //     if (tr != id_t) {
+                    //         traceverts = traces.TracesExtremesCoord[tr];
+                    //         for (const Vector3d& vertex : newvertices) {
+                    //             if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
+                    //                     -distance(traceverts[0], traceverts[1])) <= 1e-6) {
+                    //                 for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
+                    //                     if (sottopoligoni[cp] != currentpolygon) {
+                    //                         bool vertexadded = false;
+                    //                         for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
+                    //                             if (abs(distance(vertex, sottopoligoni[cp][l])+distance(vertex, sottopoligoni[cp][l+1])
+                    //                                     -distance(sottopoligoni[cp][l], sottopoligoni[cp][l+1])) >= 1e-6) {
+                    //                                 if (!vertexadded) {
+                    //                                     sottopoligoni[cp].push_back(vertex);
+                    //                                     vertexadded = true;
+                    //                                 }
+                    //                             }
+                    //                         }
+                    //                         if (abs(distance(vertex, sottopoligoni[cp][sottopoligoni[cp].size()])+distance(vertex, sottopoligoni[cp][0])
+                    //                                 -distance(sottopoligoni[cp][sottopoligoni[cp].size()], sottopoligoni[cp][0])) >= 1e-6) {
+                    //                             if (!vertexadded) {
+                    //                                 sottopoligoni[cp].push_back(vertex);
+                    //                                 vertexadded = true;
+                    //                             }
+                    //                         }
+                    //                         if (vertexadded) {
+                    //                             antiorario(sottopoligoni[cp], fractures.Normals[id]);
+                    //                         }
+                    //                     }
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 }
                 else {
                     copia.push_back(currentpolygon);
                 }
             }
             sottopoligoni = copia; // Memorizza copia in sottopoligoni
-            // copia.clear(); // Svuota copia
+            // ^copia.clear(); // Svuota copia
         }
         // Elimina gli elementi ripetuti in sottopoligoni
         for (size_t t = 0; t < sottopoligoni.size(); ++t) {
@@ -881,9 +905,9 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         //     cout << endl;
         // }
 
-        cout << endl;
+        // cout << endl;
 
-        mesh.push_back(fracturemesh);
+        // mesh.push_back(fracturemesh);
 
         // idtraces.clear();
         // sottopoligoni.clear();
