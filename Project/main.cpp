@@ -7,6 +7,7 @@
 #include <vector>
 #include <cmath>
 #include <sstream>
+#include <chrono>
 
 using namespace std;
 using namespace Eigen;
@@ -17,7 +18,7 @@ using namespace MeshLibrary;
 
 int main(int argc, char** argv)
 {
-
+    chrono::steady_clock::time_point t_begin = chrono::steady_clock::now();
     string filename = "";
     double epsilon = 10*numeric_limits<double>::epsilon();
     if(argc == 1)
@@ -68,5 +69,9 @@ int main(int argc, char** argv)
     // Parte 2
     // Calcola mesh
     meshcalc(traces, dfn, mesh);
+
+    chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
+    double tempoTrascorso = chrono::duration_cast<chrono::milliseconds>(t_end-t_begin).count();
+    cout << "Tempo trascorso: " << tempoTrascorso << "ms. " << endl;
     return 0;
 }

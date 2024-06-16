@@ -105,7 +105,7 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
             Vector3d point2(fractures.Spheres[id2](0), fractures.Spheres[id2](1), fractures.Spheres[id2](2));
             r1 = fractures.Spheres[id1](3);
             r2 = fractures.Spheres[id2](3);
-            if(distance(point1, point2) < r1+r2) {
+            if((point1-point2).squaredNorm() < pow(r1+r2,2)) {
                 ids = {id1, id2};
                 goodcouples.push_back(ids);
             }
@@ -142,7 +142,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             Vector2d b(d1,d2);
 
             // Risolvi il sistema di equazioni lineari per trovare il punto di intersezione
-            point = A.fullPivLu().solve(b);
+            point = A.colPivHouseholderQr().solve(b);
 
             // vector<Vector3d> intersections;
             for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
@@ -598,22 +598,76 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
 
         vector<vector<Vector3d>> sottopoligoni; // Array in cui memorizzare i sottopoligoni
         vector<Vector3d> fracture = fractures.CoordVertices[id];
-        sottopoligoni.reserve(pow(2, idtraces.size()));
+        sottopoligoni.reserve(50*idtraces.size());
         sottopoligoni.push_back(fracture); // Inizializza sottopoligoni uguale alla frattura
-
+        vector<vector<Vector3d>> copia; // Array copia di sottopoligoni
+        copia.reserve(2*sottopoligoni.size());
+        // vector<Vector3d> verticesontracelist;
         // Cicla su tutte le tracce della frattura (idtraces)
         for (const unsigned int& id_t : idtraces) {
-            vector<vector<Vector3d>> copia; // Array copia di sottopoligoni
-            copia.reserve(2*sottopoligoni.size());
+            // vector<vector<Vector3d>> copia; // Array copia di sottopoligoni
+            // copia.reserve(2*sottopoligoni.size());
+            vector<Vector3d> traceverts = traces.TracesExtremesCoord[id_t];
             // Cicla su tutti gli attuali sottopoligoni
             for (size_t i = 0; i < sottopoligoni.size(); ++i) {
-                vector<Vector3d> currentpolygon = sottopoligoni[i];
-                vector<Vector3d> traceverts = traces.TracesExtremesCoord[id_t];
+                vector<Vector3d> currentpolygon = sottopoligoni[i];                
                 Vector3d inter;
+
+                // Scorre la lista di vertici che si trovano sulle tracce per verificare se uno di loro appartiene a currentpolygon
+                // for (const Vector3d& vertex : verticesontracelist) {
+                //     unsigned int j = 0;
+                //     bool vertexadded = false;
+                //     unsigned int l = 0;
+                //     while (!vertexadded) {
+                //         if (distance(currentpolygon[l], vertex) <= 1e-6) {
+                //             break;
+                //         }
+                //         if (l == currentpolygon.size()-1) {
+                //             if (abs(distance(vertex, currentpolygon[currentpolygon.size()-1])+distance(vertex, currentpolygon[0])
+                //                     -distance(currentpolygon[currentpolygon.size()-1], currentpolygon[0])) >= 1e-6) {
+                //                 currentpolygon.push_back(vertex);
+                //                 verticesontracelist.erase(verticesontracelist.begin()+j);
+                //                 vertexadded = true;
+                //             }
+                //             break;
+                //         }
+                //         else {
+                //             if (abs(distance(vertex, currentpolygon[l])+distance(vertex, currentpolygon[l+1])
+                //                     -distance(currentpolygon[l], currentpolygon[l+1])) >= 1e-6) {
+                //                 currentpolygon.push_back(vertex);
+                //                 verticesontracelist.erase(verticesontracelist.begin()+j);
+                //                 vertexadded = true;
+                //             }
+                //         }
+                //         ++l;
+                //     }
+                //     if (vertexadded) {
+                //         antiorario(currentpolygon, fractures.Normals[id]);
+                //     }
+                //     ++j;
+                // }
+
+
+                // Salta al prossimo se currentpolygon e la traccia sono troppo lontani
+                Vector4d currentpolygonsphere = calcsphere(currentpolygon);
+                Vector4d tracevertsphere = calcsphere(traceverts);
+                if (distance({currentpolygonsphere(0), currentpolygonsphere(1), currentpolygonsphere(2)},
+                             {tracevertsphere(0), tracevertsphere(1), tracevertsphere(2)}) >
+                    currentpolygonsphere(3) + tracevertsphere(3)) {
+                    copia.push_back(currentpolygon);
+                    continue;
+                }
+
+
+                // Vediamo se la traccia interseca due segmenti di currentpolygon
+                bool doubleintersections = false;               
+                unsigned int countdoubleintersections = 0;
+                Vector3d vert = traceverts[0];
+                Vector3d direction = traceverts[1] - traceverts[0];
+                vector<Vector3d> newvertices;
 
                 // Usiamo il ray-casting sugli estremi della traccia
                 bool raycasting = false;
-                Vector3d direction;
                 for (size_t k = 0; k < traceverts.size(); ++k) {
                     Vector3d vert = traceverts[k];
                     unsigned int countraycasting = 0;
@@ -621,7 +675,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                         direction = traceverts[1 - k] - vert;
                         for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
                             if (intersectrettasemiretta(vert, direction, currentpolygon[j],
-                                                        currentpolygon[j+1] - currentpolygon[j], inter)) {                                
+                                                        currentpolygon[j+1] - currentpolygon[j], inter)) {
                                 if (inter == vert) {
                                     raycasting = true;
                                     break;
@@ -646,12 +700,8 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                         }
                     }
                 }
-                // Vediamo se la traccia interseca due segmenti di currentpolygon
-                bool doubleintersections = false;               
-                unsigned int countdoubleintersections = 0;
-                Vector3d vert = traceverts[0];
-                direction = traceverts[1] - traceverts[0];
-                vector<Vector3d> newvertices;
+
+
                 // Controlla se la retta della traccia interseca il lato e poi verifica
                 // se l'intersezione è interna alla traccia
                 for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
@@ -675,6 +725,8 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 if (countdoubleintersections == 2) {
                     doubleintersections = true;
                 }
+
+
 
                 // cout << "Id frattura: " << id << "; Id traccia: " << id_t << "; raycasting: " << raycasting << "; doubleintersections: " << doubleintersections << endl;
                 // Se nessuna delle condizioni è soddisfatta, salta il sottopoligono corrente
@@ -702,7 +754,11 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     sottopol2.push_back(newvertices[0]);
                     sottopol2.push_back(newvertices[1]);
                     for (size_t l = 0; l< currentpolygon.size(); ++l) {
-                        if(((newvertices[0]-currentpolygon[l]).cross(newvertices[1]-currentpolygon[l])).dot(fractures.Normals[id])>0) {
+                        if (distance(newvertices[0], currentpolygon[l]) <= 1e-6 ||
+                            distance(newvertices[1], currentpolygon[l]) <= 1e-6) {
+                            continue;
+                        }
+                        if(((newvertices[0]-currentpolygon[l]).cross(newvertices[1]-currentpolygon[l])).dot(fractures.Normals[id]) > 0) {
                             sottopol1.push_back(currentpolygon[l]);
                         }
                         else{
@@ -716,64 +772,34 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
 
-                    // Se uno dei nuovi vertici si trova su un lato di un altro sottopoligono, lo aggiunge
-                    // for (size_t tr = 0; tr < idtraces.size(); ++tr) {
-                    //     if (tr != id_t) {
-                    //         traceverts = traces.TracesExtremesCoord[tr];
-                    //         for (const Vector3d& vertex : newvertices) {
-                    //             if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
-                    //                     -distance(traceverts[0], traceverts[1])) <= 1e-6) {
-                    //                 for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
-                    //                     if (sottopoligoni[cp] != currentpolygon) {
-                    //                         bool vertexadded = false;
-                    //                         for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
-                    //                             if (abs(distance(vertex, sottopoligoni[cp][l])+distance(vertex, sottopoligoni[cp][l+1])
-                    //                                     -distance(sottopoligoni[cp][l], sottopoligoni[cp][l+1])) >= 1e-6) {
-                    //                                 if (!vertexadded) {
-                    //                                     sottopoligoni[cp].push_back(vertex);
-                    //                                     vertexadded = true;
-                    //                                 }
-                    //                             }
-                    //                         }
-                    //                         if (abs(distance(vertex, sottopoligoni[cp][sottopoligoni[cp].size()])+distance(vertex, sottopoligoni[cp][0])
-                    //                                 -distance(sottopoligoni[cp][sottopoligoni[cp].size()], sottopoligoni[cp][0])) >= 1e-6) {
-                    //                             if (!vertexadded) {
-                    //                                 sottopoligoni[cp].push_back(vertex);
-                    //                                 vertexadded = true;
-                    //                             }
-                    //                         }
-                    //                         if (vertexadded) {
-                    //                             antiorario(sottopoligoni[cp], fractures.Normals[id]);
-                    //                         }
-                    //                     }
-                    //                 }
-                    //             }
+                    // // Memorizziamo i nuovi vertici nella lista di vertici sulle tracce se necessario
+                    // for (size_t tr = 0; tr < id_t; ++tr) {
+                    //     traceverts = traces.TracesExtremesCoord[tr];
+                    //     for (const Vector3d& vertex : newvertices) {
+                    //         if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
+                    //                 -distance(traceverts[0], traceverts[1])) <= 1e-6) {
+                    //             verticesontracelist.push_back(vertex);
                     //         }
                     //     }
                     // }
+
+
                 }
                 else {
                     copia.push_back(currentpolygon);
                 }
             }
             sottopoligoni = copia; // Memorizza copia in sottopoligoni
-            // ^copia.clear(); // Svuota copia
+            copia.clear(); // Svuota copia
         }
         // Elimina gli elementi ripetuti in sottopoligoni
-        for (size_t t = 0; t < sottopoligoni.size(); ++t) {
-            for (size_t n = 0; n < sottopoligoni[t].size()-1; ++n) {
-                for (size_t j = n + 1; j < sottopoligoni[t].size(); ++j) {
-                    if (distance(sottopoligoni[t][n], sottopoligoni[t][j]) < 1e-6) {
-                        sottopoligoni[t].erase(sottopoligoni[t].begin()+j);
-                    }
-                }
-            }
-        }
-
         // for (size_t t = 0; t < sottopoligoni.size(); ++t) {
-        //     cout << "Sottopoligono numero " << t << ": " << endl;
-        //     for (size_t n = 0; n < sottopoligoni[t].size(); ++n) {
-        //         cout << sottopoligoni[t][n].transpose() << endl;
+        //     for (size_t n = 0; n < sottopoligoni[t].size()-1; ++n) {
+        //         for (size_t j = n + 1; j < sottopoligoni[t].size(); ++j) {
+        //             if (distance(sottopoligoni[t][n], sottopoligoni[t][j]) < 1e-6) {
+        //                 sottopoligoni[t].erase(sottopoligoni[t].begin()+j);
+        //             }
+        //         }
         //     }
         // }
 
