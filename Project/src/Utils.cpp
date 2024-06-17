@@ -7,6 +7,7 @@
 #include <Eigen/Eigen>
 #include <algorithm>
 #include <bits/stdc++.h>
+#include <chrono>
 
 using namespace std;
 using namespace Eigen;
@@ -105,7 +106,7 @@ list<vector<unsigned int>> checkspheres(const Fractures& fractures)
             Vector3d point2(fractures.Spheres[id2](0), fractures.Spheres[id2](1), fractures.Spheres[id2](2));
             r1 = fractures.Spheres[id1](3);
             r2 = fractures.Spheres[id2](3);
-            if((point1-point2).squaredNorm() < pow(r1+r2,2)) {
+            if((point1-point2).squaredNorm() < (r1+r2)*(r1+r2)) {
                 ids = {id1, id2};
                 goodcouples.push_back(ids);
             }
@@ -232,7 +233,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                     }
                 }
             }
-            if (intersections.size() == 2 && distance(intersections[0], intersections[1]) >= 1e-6) {
+            if (intersections.size() == 2 && distance(intersections[0], intersections[1]) > 1e-6) {
                 // Popola TracesExtremesCoord
                 traces.TracesExtremesCoord.push_back(intersections);
                 // Popola TracesFracturesId
@@ -249,12 +250,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 // Controlla tutti i lati di id1 per il primo estremo della traccia
                 for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                     if (abs(distance(intersections[0], fractures.CoordVertices[id1][i]) + distance(intersections[0], fractures.CoordVertices[id1][i+1])
-                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) <= 1e-6) {
+                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) < 1e-6) {
                         count++;
                     }
                 }                
                 if (abs(distance(intersections[0], fractures.CoordVertices[id1][0]) + distance(intersections[0], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
-                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) < 1e-6) {
                     count++;
                 }
                 if (count >= 1) {
@@ -264,12 +265,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 count = 0;
                 for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                     if (abs(distance(intersections[1], fractures.CoordVertices[id1][i]) + distance(intersections[1], fractures.CoordVertices[id1][i+1])
-                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) <= 1e-6) {
+                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) < 1e-6) {
                         count++;
                     }
                 }
                 if (abs(distance(intersections[1], fractures.CoordVertices[id1][0]) + distance(intersections[1], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
-                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) < 1e-6) {
                     count++;
                 }
                 if (count == 0) {
@@ -287,12 +288,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 tips = false;
                 for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
                     if (distance(intersections[0], fractures.CoordVertices[id2][i]) + distance(intersections[0], fractures.CoordVertices[id2][i+1])
-                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) < 1e-6) {
                         count++;
                     }
                 }
                 if (distance(intersections[0], fractures.CoordVertices[id2][0]) + distance(intersections[0], fractures.CoordVertices[id2][fractures.CoordVertices.size() - 1])
-                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) < 1e-6) {
                     count++;
                 }
                 if (count >= 1) {
@@ -305,7 +306,7 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                     }
                 }
                 if (distance(intersections[1], fractures.CoordVertices[id2][0]) + distance(intersections[1], fractures.CoordVertices[id2][fractures.CoordVertices.size() - 1])
-                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) <= 1e-6) {
+                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) < 1e-6) {
                     count++;
                 }
                 if (count == 0) {
@@ -374,9 +375,11 @@ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
 {
     Vector3d cross_product = dir.cross(dir1);
     Vector3d diff = point1 - point;
+    double crossnorm = cross_product.norm();
+    crossnorm *= crossnorm;
 
-    double t = (diff.cross(dir1)).dot(cross_product)/pow(cross_product.norm(),2);
-    double s = (diff.cross(dir)).dot(cross_product)/pow(cross_product.norm(),2);
+    double t = (diff.cross(dir1)).dot(cross_product)/crossnorm;
+    double s = (diff.cross(dir)).dot(cross_product)/crossnorm;
 
     Vector3d pl = point+t*dir;
     Vector3d pl1 = point1+s*dir1;
@@ -401,9 +404,11 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
 {
     Vector3d cross_product = dir.cross(dir1);
     Vector3d diff = point1 - point;
+    double crossnorm = cross_product.norm();
+    crossnorm *= crossnorm;
 
-    double t = (diff.cross(dir1)).dot(cross_product)/pow(cross_product.norm(),2) ;
-    double s = (diff.cross(dir)).dot(cross_product)/pow(cross_product.norm(),2);
+    double t = (diff.cross(dir1)).dot(cross_product)/crossnorm;
+    double s = (diff.cross(dir)).dot(cross_product)/crossnorm;
 
     Vector3d pl = point+t*dir;
     Vector3d pl1 = point1+s*dir1;
@@ -435,11 +440,11 @@ double calcolangolo(const Vector3d& v1, const Vector3d& v2, const Vector3d& norm
 void antiorario(vector<Vector3d>& sottopol, const Vector3d& normal)
 {
     Vector3d baricentro = {0,0,0};
-    for (size_t k = 0; k < sottopol.size(); ++k) {
-        baricentro += sottopol[k];
+    for (const Vector3d& stt : sottopol) {
+        baricentro += stt;
     }
     baricentro /= sottopol.size();
-    sort(sottopol.begin(), sottopol.end(), [baricentro, normal](Vector3d  a,  Vector3d  b)
+    sort(sottopol.begin(), sottopol.end(), [&baricentro, &normal](const Vector3d&  a,const Vector3d&  b)
          {
         return (calcolangolo(Vector3d(1,0,0),a-baricentro,normal) <
                 calcolangolo(Vector3d(1,0,0),b-baricentro,normal));
@@ -482,12 +487,12 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
     //     return len[a] < len[b];
     //      });
 
-    sort(traces.TipsTrue.begin(), traces.TipsTrue.end(), [len](vector<unsigned int> a, vector<unsigned int> b)
+    sort(traces.TipsTrue.begin(), traces.TipsTrue.end(), [&len](vector<unsigned int>& a, vector<unsigned int>& b)
          {
         return len[a[0]] > len[b[0]];
          });
 
-    sort(traces.TipsFalse.begin(), traces.TipsFalse.end(), [len](vector<unsigned int> a, vector<unsigned int> b)
+    sort(traces.TipsFalse.begin(), traces.TipsFalse.end(), [&len](vector<unsigned int>& a, vector<unsigned int>& b)
          {
         return len[a[0]] > len[b[0]];
          });
@@ -609,44 +614,8 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
             // copia.reserve(2*sottopoligoni.size());
             vector<Vector3d> traceverts = traces.TracesExtremesCoord[id_t];
             // Cicla su tutti gli attuali sottopoligoni
-            for (size_t i = 0; i < sottopoligoni.size(); ++i) {
-                vector<Vector3d> currentpolygon = sottopoligoni[i];                
+            for (const vector<Vector3d>& currentpolygon : sottopoligoni) {
                 Vector3d inter;
-
-                // Scorre la lista di vertici che si trovano sulle tracce per verificare se uno di loro appartiene a currentpolygon
-                // for (const Vector3d& vertex : verticesontracelist) {
-                //     unsigned int j = 0;
-                //     bool vertexadded = false;
-                //     unsigned int l = 0;
-                //     while (!vertexadded) {
-                //         if (distance(currentpolygon[l], vertex) <= 1e-6) {
-                //             break;
-                //         }
-                //         if (l == currentpolygon.size()-1) {
-                //             if (abs(distance(vertex, currentpolygon[currentpolygon.size()-1])+distance(vertex, currentpolygon[0])
-                //                     -distance(currentpolygon[currentpolygon.size()-1], currentpolygon[0])) >= 1e-6) {
-                //                 currentpolygon.push_back(vertex);
-                //                 verticesontracelist.erase(verticesontracelist.begin()+j);
-                //                 vertexadded = true;
-                //             }
-                //             break;
-                //         }
-                //         else {
-                //             if (abs(distance(vertex, currentpolygon[l])+distance(vertex, currentpolygon[l+1])
-                //                     -distance(currentpolygon[l], currentpolygon[l+1])) >= 1e-6) {
-                //                 currentpolygon.push_back(vertex);
-                //                 verticesontracelist.erase(verticesontracelist.begin()+j);
-                //                 vertexadded = true;
-                //             }
-                //         }
-                //         ++l;
-                //     }
-                //     if (vertexadded) {
-                //         antiorario(currentpolygon, fractures.Normals[id]);
-                //     }
-                //     ++j;
-                // }
-
 
                 // Salta al prossimo se currentpolygon e la traccia sono troppo lontani
                 Vector4d currentpolygonsphere = calcsphere(currentpolygon);
@@ -658,6 +627,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     continue;
                 }
 
+                chrono::steady_clock::time_point t_begin = chrono::steady_clock::now();
 
                 // Vediamo se la traccia interseca due segmenti di currentpolygon
                 bool doubleintersections = false;               
@@ -665,42 +635,6 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 Vector3d vert = traceverts[0];
                 Vector3d direction = traceverts[1] - traceverts[0];
                 vector<Vector3d> newvertices;
-
-                // Usiamo il ray-casting sugli estremi della traccia
-                bool raycasting = false;
-                for (size_t k = 0; k < traceverts.size(); ++k) {
-                    Vector3d vert = traceverts[k];
-                    unsigned int countraycasting = 0;
-                    if (!raycasting) {
-                        direction = traceverts[1 - k] - vert;
-                        for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
-                            if (intersectrettasemiretta(vert, direction, currentpolygon[j],
-                                                        currentpolygon[j+1] - currentpolygon[j], inter)) {
-                                if (inter == vert) {
-                                    raycasting = true;
-                                    break;
-                                }
-                                countraycasting++;
-                            }
-                        }
-                        if (raycasting) {
-                            break;
-                        }
-                        if (intersectrettasemiretta(vert, direction, currentpolygon[currentpolygon.size()-1],
-                                                    currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
-                            if (inter == vert) {
-                                raycasting = true;
-                                break;
-                            }
-                            countraycasting++;
-                        }
-                        if (countraycasting == 1) {
-                            raycasting = true;
-                            break;
-                        }
-                    }
-                }
-
 
                 // Controlla se la retta della traccia interseca il lato e poi verifica
                 // se l'intersezione è interna alla traccia
@@ -726,7 +660,54 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     doubleintersections = true;
                 }
 
+                bool raycasting = false;
+                if (!doubleintersections) {
+                    // Usiamo il ray-casting sugli estremi della traccia
+                    for (size_t k = 0; k < traceverts.size(); ++k) {
+                        Vector3d vert = traceverts[k];
+                        unsigned int countraycasting = 0;
+                        unsigned int vertexinter = 0;
+                        if (!raycasting) {
+                            direction = traceverts[1 - k] - vert;
+                            for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
+                                if (intersectrettasemiretta(vert, direction, currentpolygon[j],
+                                                            currentpolygon[j+1] - currentpolygon[j], inter)) {
+                                    if (distance(inter, vert) < 1e-6) {
+                                        raycasting = true;
+                                        break;
+                                    }
+                                    if (distance(inter,currentpolygon[j])) {
+                                        vertexinter++;
+                                    }
+                                    countraycasting++;
+                                }
+                            }
+                            if (raycasting) {
+                                break;
+                            }
+                            if (intersectrettasemiretta(vert, direction, currentpolygon[currentpolygon.size()-1],
+                                                        currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
+                                if (distance(inter, vert) < 1e-6) {
+                                    raycasting = true;
+                                    break;
+                                }
+                                if (distance(inter,currentpolygon[currentpolygon.size()])) {
+                                    vertexinter++;
+                                }
+                                countraycasting++;
+                            }
+                            countraycasting -= vertexinter/2;
+                            if (countraycasting == 1) {
+                                raycasting = true;
+                                break;
+                            }
+                        }
+                    }
+                }
 
+                chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
+                double tempoTrascorso = chrono::duration_cast<chrono::microseconds>(t_end-t_begin).count();
+                cout << "Tempo raycasting+doubleintersections: " << tempoTrascorso << "micros. " << endl;
 
                 // cout << "Id frattura: " << id << "; Id traccia: " << id_t << "; raycasting: " << raycasting << "; doubleintersections: " << doubleintersections << endl;
                 // Se nessuna delle condizioni è soddisfatta, salta il sottopoligono corrente
@@ -771,25 +752,12 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     // Memorizza i sottopoligoni in copia
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
-
-                    // // Memorizziamo i nuovi vertici nella lista di vertici sulle tracce se necessario
-                    // for (size_t tr = 0; tr < id_t; ++tr) {
-                    //     traceverts = traces.TracesExtremesCoord[tr];
-                    //     for (const Vector3d& vertex : newvertices) {
-                    //         if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
-                    //                 -distance(traceverts[0], traceverts[1])) <= 1e-6) {
-                    //             verticesontracelist.push_back(vertex);
-                    //         }
-                    //     }
-                    // }
-
-
                 }
                 else {
                     copia.push_back(currentpolygon);
                 }
             }
-            sottopoligoni = copia; // Memorizza copia in sottopoligoni
+            sottopoligoni = move(copia); // Memorizza copia in sottopoligoni
             copia.clear(); // Svuota copia
         }
         // Elimina gli elementi ripetuti in sottopoligoni
@@ -804,6 +772,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         // }
 
         // Popola mesh
+        chrono::steady_clock::time_point t_begin = chrono::steady_clock::now();
         PolygonalMesh fracturemesh;
         unsigned int id0d = 0;
         for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
@@ -933,7 +902,11 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
 
         // cout << endl;
 
-        // mesh.push_back(fracturemesh);
+        mesh.push_back(fracturemesh);
+
+        chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
+        double tempoTrascorso = chrono::duration_cast<chrono::microseconds>(t_end-t_begin).count();
+        cout << "Tempo mesh: " << tempoTrascorso << "micros. " << endl;
 
         // idtraces.clear();
         // sottopoligoni.clear();
