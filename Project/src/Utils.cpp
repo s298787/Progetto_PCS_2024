@@ -360,7 +360,7 @@ Vector4d calcsphere(const vector<Vector3d>& vertex_data)
     sphere(3) = raggio;
     return sphere;
 }
-double distance(const Vector3d& point1, const Vector3d& point2)
+inline double distance(const Vector3d& point1, const Vector3d& point2)
 {
     return (point1-point2).norm();
 }
@@ -870,35 +870,35 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         cout << "Numero tracce: " << idtraces.size() << endl;
 
         cout << "Il numero di celle 0d è: " << fracturemesh.NumberCell0d << endl;
-        // for (unsigned int n = 0; n < fracturemesh.NumberCell0d; ++n) {
-        //     cout << "Id cella 0d - " << fracturemesh.IdCell0d[n] << ": ";
-        //     for (unsigned int j = 0; j < 3; ++j) {
-        //         cout << fracturemesh.CoordCell0d[n](j) << "; ";
-        //     }
-        //     cout << endl;
-        // }
+        for (unsigned int n = 0; n < fracturemesh.NumberCell0d; ++n) {
+            cout << "Id cella 0d - " << fracturemesh.IdCell0d[n] << ": ";
+            for (unsigned int j = 0; j < 3; ++j) {
+                cout << fracturemesh.CoordCell0d[n](j) << "; ";
+            }
+            cout << endl;
+        }
 
         cout << "Il numero di celle 1d è: " << fracturemesh.NumberCell1d << endl;
-        // for (unsigned int n = 0; n < fracturemesh.NumberCell1d; ++n) {
-        //     cout << "Id cella 1d - " << fracturemesh.IdCell1d[n] << ": ";
-        //     for (unsigned int j = 0; j < 2; ++j) {
-        //         cout << fracturemesh.IdVerticesCell1d[n][j] << "; ";
-        //     }
-        //     cout << endl;
-        // }
+        for (unsigned int n = 0; n < fracturemesh.NumberCell1d; ++n) {
+            cout << "Id cella 1d - " << fracturemesh.IdCell1d[n] << ": ";
+            for (unsigned int j = 0; j < 2; ++j) {
+                cout << fracturemesh.IdVerticesCell1d[n][j] << "; ";
+            }
+            cout << endl;
+        }
 
         cout << "Il numero di celle 2d è: " << fracturemesh.NumberCell2d << endl;
-        // for (unsigned int n = 0; n < fracturemesh.NumberCell2d; ++n) {
-        //     cout << "Id cella 2d - " << fracturemesh.IdCell2d[n] << ": " << endl;
-        //     for (unsigned int j = 0; j < fracturemesh.IdVerticesCell2d[n].size(); ++j) {
-        //         cout << fracturemesh.IdVerticesCell2d[n][j] << "; ";
-        //     }
-        //     cout << endl;
-        //     for (unsigned int j = 0; j < fracturemesh.IdEdgesCell2d[n].size(); ++j) {
-        //         cout << fracturemesh.IdEdgesCell2d[n][j] << "; ";
-        //     }
-        //     cout << endl;
-        // }
+        for (unsigned int n = 0; n < fracturemesh.NumberCell2d; ++n) {
+            cout << "Id cella 2d - " << fracturemesh.IdCell2d[n] << ": " << endl;
+            for (unsigned int j = 0; j < fracturemesh.IdVerticesCell2d[n].size(); ++j) {
+                cout << fracturemesh.IdVerticesCell2d[n][j] << "; ";
+            }
+            cout << endl;
+            for (unsigned int j = 0; j < fracturemesh.IdEdgesCell2d[n].size(); ++j) {
+                cout << fracturemesh.IdEdgesCell2d[n][j] << "; ";
+            }
+            cout << endl;
+        }
 
         // cout << endl;
 

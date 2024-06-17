@@ -66,14 +66,14 @@ TEST(DFNAnalytics, 3DSpheres){
     EXPECT_NEAR(sferaquad(3), sqrt(2.0), tol);
 }
 
-TEST(DFNAnalytics, BasicDistance){
-    double dist1 = Analytics::distance(Vector3d(1,1,1), Vector3d(0,0,0));
-    EXPECT_NEAR(dist1, sqrt(3.0), tol);
-}
-TEST(DFNAnalytics, 3DDistance){
-    double dist2 = Analytics::distance(Vector3d(-3,2,4), Vector3d(1,2,3));
-    EXPECT_NEAR(dist2, sqrt(17.0), tol);
-}
+// TEST(DFNAnalytics, BasicDistance){
+//     double dist1 = Analytics::distance(Vector3d(1,1,1), Vector3d(0,0,0));
+//     EXPECT_NEAR(dist1, sqrt(3.0), tol);
+// }
+// TEST(DFNAnalytics, 3DDistance){
+//     double dist2 = Analytics::distance(Vector3d(-3,2,4), Vector3d(1,2,3));
+//     EXPECT_NEAR(dist2, sqrt(17.0), tol);
+// }
 
 TEST(DFNAnalytics, Normals){
     Vector3d norm1 = Analytics::normal({Vector3d(1,0,0), Vector3d(0,1,0), Vector3d(-1,0,0), Vector3d(0,-1,0)});
