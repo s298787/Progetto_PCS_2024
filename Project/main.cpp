@@ -15,6 +15,7 @@ using namespace Polygons;
 using namespace Analytics;
 using namespace OutputFileTools;
 using namespace MeshLibrary;
+using namespace Export;
 
 int main(int argc, char** argv)
 {
@@ -37,7 +38,6 @@ int main(int argc, char** argv)
     Fractures dfn;
     Traces traces;
     vector<PolygonalMesh> mesh;
-    // string filename = "./FR10_data.txt";
 
     //Parte 1
     // Lettura file input
@@ -68,7 +68,12 @@ int main(int argc, char** argv)
 
     // Parte 2
     // Calcola mesh
-    meshcalc(traces, dfn, mesh);
+    string meshfileout = "mesh_" + to_string(dfn.FracturesNumber) + ".txt";
+    if (meshcalc(traces, dfn, mesh, meshfileout)) {
+        cout << "File " << meshfileout << " written successfully" << endl;
+    }
+
+    // exportMesh(mesh);
 
     chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
     double tempoTrascorso = chrono::duration_cast<chrono::milliseconds>(t_end-t_begin).count();

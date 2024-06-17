@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Eigen/Eigen"
+#include <unordered_set>
 
 using namespace std;
 using namespace Eigen;

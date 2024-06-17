@@ -8,6 +8,9 @@
 #include <algorithm>
 #include <bits/stdc++.h>
 #include <chrono>
+#include <unordered_set>
+#include <unordered_map>
+#include "UCDUtilities.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -360,7 +363,7 @@ Vector4d calcsphere(const vector<Vector3d>& vertex_data)
     sphere(3) = raggio;
     return sphere;
 }
-inline double distance(const Vector3d& point1, const Vector3d& point2)
+double distance(const Vector3d& point1, const Vector3d& point2)
 {
     return (point1-point2).norm();
 }
@@ -563,9 +566,30 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
 namespace MeshLibrary {
 using namespace Polygons;
 using namespace Analytics;
-void meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh)
+struct vector3d_hash {
+    size_t operator()(const Vector3d& v) const {
+        size_t seed = 0;
+        for (int i = 0; i < v.size(); ++i) {
+            seed ^= hash<double>()(v[i]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
+    }
+};
+struct pair_hash {
+    size_t operator()(const pair<unsigned int, unsigned int>& p) const {
+        auto hash1 = hash<unsigned int>{}(p.first);
+        auto hash2 = hash<unsigned int>{}(p.second);
+        return hash1 ^ (hash2 << 1);
+    }
+};
+bool meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh, const string& meshfileout)
 {
-    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {                        
+    ofstream fileout(meshfileout);
+    if (fileout.fail()) {
+        cerr << "Error while creating/opening " << meshfileout << endl;
+        return false;
+    }
+    for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
         // Crea un array di tracce della singola frattura
         vector<unsigned int> idtraces;
         // Verifica quali tracce passano per la frattura id e le memorizza in idtraces
@@ -626,8 +650,6 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     copia.push_back(currentpolygon);
                     continue;
                 }
-
-                chrono::steady_clock::time_point t_begin = chrono::steady_clock::now();
 
                 // Vediamo se la traccia interseca due segmenti di currentpolygon
                 bool doubleintersections = false;               
@@ -705,10 +727,6 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     }
                 }
 
-                chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
-                double tempoTrascorso = chrono::duration_cast<chrono::microseconds>(t_end-t_begin).count();
-                cout << "Tempo raycasting+doubleintersections: " << tempoTrascorso << "micros. " << endl;
-
                 // cout << "Id frattura: " << id << "; Id traccia: " << id_t << "; raycasting: " << raycasting << "; doubleintersections: " << doubleintersections << endl;
                 // Se nessuna delle condizioni è soddisfatta, salta il sottopoligono corrente
                 if (!raycasting && !doubleintersections) {
@@ -752,6 +770,40 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     // Memorizza i sottopoligoni in copia
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
+
+                    // Aggiunge il vertice se si trova sulla traccia
+                    // for (size_t tr = 0; tr < id_t; ++tr) {
+                    //     traceverts = traces.TracesExtremesCoord[tr];
+                    //     for (const Vector3d& vertex : newvertices) {
+                    //         if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
+                    //                 -distance(traceverts[0], traceverts[1])) <= 1e-6) {
+                    //             for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
+                    //                 if (sottopoligoni[cp] != currentpolygon) {
+                    //                     bool vertexadded = false;
+                    //                     for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
+                    //                         if (abs(distance(vertex, sottopoligoni[cp][l])+distance(vertex, sottopoligoni[cp][l+1])
+                    //                                 -distance(sottopoligoni[cp][l], sottopoligoni[cp][l+1])) >= 1e-6) {
+                    //                             if (!vertexadded) {
+                    //                                 sottopoligoni[cp].push_back(vertex);
+                    //                                 vertexadded = true;
+                    //                             }
+                    //                         }
+                    //                     }
+                    //                     if (abs(distance(vertex, sottopoligoni[cp][sottopoligoni[cp].size()])+distance(vertex, sottopoligoni[cp][0])
+                    //                             -distance(sottopoligoni[cp][sottopoligoni[cp].size()], sottopoligoni[cp][0])) >= 1e-6) {
+                    //                         if (!vertexadded) {
+                    //                             sottopoligoni[cp].push_back(vertex);
+                    //                             vertexadded = true;
+                    //                         }
+                    //                     }
+                    //                     if (vertexadded) {
+                    //                         antiorario(sottopoligoni[cp], fractures.Normals[id]);
+                    //                     }
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 }
                 else {
                     copia.push_back(currentpolygon);
@@ -779,7 +831,7 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
             for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j)  {
                 bool repetition = false;
                 for (size_t k = 0; k < fracturemesh.CoordCell0d.size(); ++k) {
-                    if (distance(sottopoligoni[n][j], fracturemesh.CoordCell0d[k]) <= 1e-6) {
+                    if (distance(sottopoligoni[n][j], fracturemesh.CoordCell0d[k]) < 1e-6) {
                         repetition = true;
                     }
                 }
@@ -792,124 +844,159 @@ void meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         }
         fracturemesh.NumberCell0d = fracturemesh.IdCell0d.size();
 
+
         unsigned int id1d = 0;
-        for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
-            for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
-                for (unsigned int q = 0; q < fracturemesh.CoordCell0d.size(); ++q) {
-                    for (unsigned int j = 0; j < sottopoligoni[n].size() - 1; ++j) {
-                        if (distance(fracturemesh.CoordCell0d[p], sottopoligoni[n][j]) < 1e-6) {
-                            if (distance(fracturemesh.CoordCell0d[q], sottopoligoni[n][j+1]) < 1e-6) {
-                                vector<unsigned int> lato1 = {fracturemesh.IdCell0d[p],fracturemesh.IdCell0d[q]};
-                                vector<unsigned int> lato2 = {fracturemesh.IdCell0d[q],fracturemesh.IdCell0d[p]};
-                                if (find(fracturemesh.IdVerticesCell1d.begin(), fracturemesh.IdVerticesCell1d.end(), lato1) == fracturemesh.IdVerticesCell1d.end() &&
-                                    find(fracturemesh.IdVerticesCell1d.begin(), fracturemesh.IdVerticesCell1d.end(), lato2) == fracturemesh.IdVerticesCell1d.end()) {
-                                    fracturemesh.IdVerticesCell1d.push_back(lato1);
+        unordered_map<pair<unsigned int, unsigned int>, bool, pair_hash> checked_pairs;
+
+        // Celle 1d
+        for (const auto& poly : sottopoligoni) {
+            for (size_t j = 0; j < poly.size(); ++j) {
+                size_t next_j = (j + 1) % poly.size();
+                for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
+                    if (distance(fracturemesh.CoordCell0d[p], poly[j]) < 1e-6) {
+                        for (unsigned int q = 0; q < fracturemesh.CoordCell0d.size(); ++ q) {
+                            if (distance(fracturemesh.CoordCell0d[q], poly[next_j]) < 1e-6) {
+                                auto lato1 = make_pair(fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]);
+                                auto lato2 = make_pair(fracturemesh.IdCell0d[q], fracturemesh.IdCell0d[p]);
+                                if (checked_pairs.find(lato1) == checked_pairs.end() && checked_pairs.find(lato2) == checked_pairs.end()) {
+                                    fracturemesh.IdVerticesCell1d.push_back({fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]});
                                     fracturemesh.IdCell1d.push_back(id1d);
                                     id1d++;
+                                    checked_pairs[lato1] = true;
+                                    checked_pairs[lato2] = true;
                                 }
-                            }
-                        }
-                    }
-                    if (distance(fracturemesh.CoordCell0d[p], sottopoligoni[n][sottopoligoni[n].size()-1]) < 1e-6) {
-                        if (distance(fracturemesh.CoordCell0d[q], sottopoligoni[n][0]) < 1e-6) {
-                            vector<unsigned int> lato1 = {fracturemesh.IdCell0d[p],fracturemesh.IdCell0d[q]};
-                            vector<unsigned int> lato2 = {fracturemesh.IdCell0d[q],fracturemesh.IdCell0d[p]};
-                            if (find(fracturemesh.IdVerticesCell1d.begin(), fracturemesh.IdVerticesCell1d.end(), lato1) == fracturemesh.IdVerticesCell1d.end() &&
-                                find(fracturemesh.IdVerticesCell1d.begin(), fracturemesh.IdVerticesCell1d.end(), lato2) == fracturemesh.IdVerticesCell1d.end()) {
-                                fracturemesh.IdVerticesCell1d.push_back(lato1);
-                                fracturemesh.IdCell1d.push_back(id1d);
-                                id1d++;
                             }
                         }
                     }
                 }
             }
         }
+
         fracturemesh.NumberCell1d = fracturemesh.IdCell1d.size();
 
+        // Celle 2d
         fracturemesh.IdCell2d.reserve(sottopoligoni.size());
         fracturemesh.IdVerticesCell2d.reserve(sottopoligoni.size());
+
+        unordered_map<Vector3d, unsigned int, vector3d_hash> coord_to_id;
+        for (unsigned int i = 0; i < fracturemesh.CoordCell0d.size(); ++i) {
+            coord_to_id[fracturemesh.CoordCell0d[i]] = fracturemesh.IdCell0d[i];
+        }
+
         for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
             if (sottopoligoni[n].size() > 2) {
                 fracturemesh.IdCell2d.push_back(n);
                 vector<unsigned int> verticescell2d;
-                for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j) {
-                    for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
-                        if (distance(fracturemesh.CoordCell0d[p], sottopoligoni[n][j]) <= 1e-6) {
-                            verticescell2d.push_back(fracturemesh.IdCell0d[p]);
-                        }
+
+                for (const auto& vertex : sottopoligoni[n]) {
+                    auto it = coord_to_id.find(vertex);
+                    if (it != coord_to_id.end()) {
+                        verticescell2d.push_back(it->second);
                     }
                 }
+
                 fracturemesh.IdVerticesCell2d.push_back(verticescell2d);
                 vector<unsigned int> edgescell2d;
-                vector<unsigned int> extremesids1;
-                vector<unsigned int> extremesids2;
+
                 for (unsigned int p = 0; p < fracturemesh.IdVerticesCell1d.size(); ++p) {
-                    for (unsigned int j = 0; j < verticescell2d.size()-1; ++j) {
-                        extremesids1 = {verticescell2d[j], verticescell2d[j+1]};
-                        extremesids2 = {verticescell2d[j+1], verticescell2d[j]};
-                        if (extremesids1 == fracturemesh.IdVerticesCell1d[p] ||
-                            extremesids2 == fracturemesh.IdVerticesCell1d[p]) {
+                    for (unsigned int j = 0; j < verticescell2d.size(); ++j) {
+                        unsigned int next_j = (j + 1) % verticescell2d.size(); // next index, wraps around to 0
+                        vector<unsigned int> extremesids1 = {verticescell2d[j], verticescell2d[next_j]};
+                        vector<unsigned int> extremesids2 = {verticescell2d[next_j], verticescell2d[j]};
+
+                        if (extremesids1 == fracturemesh.IdVerticesCell1d[p] || extremesids2 == fracturemesh.IdVerticesCell1d[p]) {
                             edgescell2d.push_back(fracturemesh.IdCell1d[p]);
                         }
                     }
-                    extremesids1 = {verticescell2d[verticescell2d.size()-1], verticescell2d[0]};
-                    extremesids2 = {verticescell2d[0], verticescell2d[verticescell2d.size()-1]};
-                    if (extremesids1 == fracturemesh.IdVerticesCell1d[p] ||
-                        extremesids2 == fracturemesh.IdVerticesCell1d[p]) {
-                        edgescell2d.push_back(fracturemesh.IdCell1d[p]);
-                    }
                 }
+
                 fracturemesh.IdEdgesCell2d.push_back(edgescell2d);
             }
         }
         fracturemesh.NumberCell2d = fracturemesh.IdCell2d.size();
 
-        cout << "Id frattura: " << id << endl;
-        cout << "Numero sottopoligoni: " << fracturemesh.NumberCell2d << endl;
-        cout << "Numero tracce: " << idtraces.size() << endl;
+        fileout << "Id frattura: " << id << endl;
+        fileout << "Numero di tracce: " << idtraces.size() << endl;
+        fileout << "Numero di sottopoligoni: " << fracturemesh.NumberCell2d << endl;
+        fileout << "Il numero di celle 0d è: " << fracturemesh.NumberCell0d << endl;
+        fileout << "IdCell0d: X; Y; Z" << endl;
 
-        cout << "Il numero di celle 0d è: " << fracturemesh.NumberCell0d << endl;
+
         for (unsigned int n = 0; n < fracturemesh.NumberCell0d; ++n) {
-            cout << "Id cella 0d - " << fracturemesh.IdCell0d[n] << ": ";
+            fileout << fracturemesh.IdCell0d[n] << ": ";
             for (unsigned int j = 0; j < 3; ++j) {
-                cout << fracturemesh.CoordCell0d[n](j) << "; ";
+                fileout << fracturemesh.CoordCell0d[n](j) << "; ";
             }
-            cout << endl;
+            fileout << endl;
         }
 
-        cout << "Il numero di celle 1d è: " << fracturemesh.NumberCell1d << endl;
+
+        fileout << "Il numero di celle 1d è: " << fracturemesh.NumberCell1d << endl;
+        fileout << "Id Cell1d: Origin; End" << endl;
         for (unsigned int n = 0; n < fracturemesh.NumberCell1d; ++n) {
-            cout << "Id cella 1d - " << fracturemesh.IdCell1d[n] << ": ";
+            fileout << fracturemesh.IdCell1d[n] << ": ";
             for (unsigned int j = 0; j < 2; ++j) {
-                cout << fracturemesh.IdVerticesCell1d[n][j] << "; ";
+                fileout << fracturemesh.IdVerticesCell1d[n][j] << "; ";
             }
-            cout << endl;
+            fileout << endl;
         }
 
-        cout << "Il numero di celle 2d è: " << fracturemesh.NumberCell2d << endl;
+        fileout << "Il numero di celle 2d è: " << fracturemesh.NumberCell2d << endl;
+        fileout << "IdCells2d: NumVertices; Vertices; NumEdges; Edges" << endl;
         for (unsigned int n = 0; n < fracturemesh.NumberCell2d; ++n) {
-            cout << "Id cella 2d - " << fracturemesh.IdCell2d[n] << ": " << endl;
+            fileout  << fracturemesh.IdCell2d[n] << ": " ;
+            fileout << fracturemesh.IdVerticesCell2d[n].size() << "; " ;
             for (unsigned int j = 0; j < fracturemesh.IdVerticesCell2d[n].size(); ++j) {
-                cout << fracturemesh.IdVerticesCell2d[n][j] << "; ";
+                fileout << fracturemesh.IdVerticesCell2d[n][j] << "; ";
             }
-            cout << endl;
+
+            fileout << fracturemesh.IdEdgesCell2d[n].size() << "; " ;
             for (unsigned int j = 0; j < fracturemesh.IdEdgesCell2d[n].size(); ++j) {
-                cout << fracturemesh.IdEdgesCell2d[n][j] << "; ";
+                fileout << fracturemesh.IdEdgesCell2d[n][j] << "; ";
             }
-            cout << endl;
+            fileout << endl;
         }
 
-        // cout << endl;
+        fileout << endl;
 
         mesh.push_back(fracturemesh);
 
         chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
         double tempoTrascorso = chrono::duration_cast<chrono::microseconds>(t_end-t_begin).count();
         cout << "Tempo mesh: " << tempoTrascorso << "micros. " << endl;
-
-        // idtraces.clear();
-        // sottopoligoni.clear();
     }
+    fileout.close();
+    return true;
+}
+}
+
+namespace Export{
+void exportMesh(const vector<MeshLibrary::PolygonalMesh>& mesh){
+    unsigned int numCols = mesh[7].NumberCell0d;
+
+
+    // Creo la matrice di dimensioni 3xNumCols
+    MatrixXd matrix(3, numCols);
+
+    for (unsigned int i = 0; i < numCols; ++i) {
+        matrix.col(i) = mesh[7].CoordCell0d[i];
+    }
+
+    Gedim::UCDUtilities exporter;
+    string fileName = "./ExportMeshVertices.inp";
+    exporter.ExportPoints( fileName, matrix,{},{});
+
+
+    unsigned int numCols2 = mesh[7].NumberCell1d;
+
+    // Crea la matrice di dimensioni 2xNumCols
+    MatrixXi matrix2(2, numCols2);
+
+    for (unsigned int i = 0; i < numCols2; ++i) {
+        matrix2.col(i) = Vector2i(mesh[7].IdVerticesCell1d[i][0],mesh[7].IdVerticesCell1d[i][1]);
+    }
+    string fileName1 = "./ExportMeshEdges.inp";
+    exporter.ExportSegments( fileName1, matrix,matrix2);
+
 }
 }

@@ -1,0 +1,75 @@
+        // unordered_set<pair<unsigned int, unsigned int>> insertedcells;
+        // unsigned int id1d = 0;
+        // for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
+        //     for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
+        //         for (unsigned int q = 0; q < fracturemesh.CoordCell0d.size(); ++q) {
+        //             for (unsigned int j = 0; j < sottopoligoni[n].size() - 1; ++j) {
+        //                 if (distance(fracturemesh.CoordCell0d[p], sottopoligoni[n][j]) < 1e-6) {
+        //                     if (distance(fracturemesh.CoordCell0d[q], sottopoligoni[n][j+1]) < 1e-6) {
+        //                         vector<unsigned int> lato1 = {fracturemesh.IdCell0d[p],fracturemesh.IdCell0d[q]};
+        //                         vector<unsigned int> lato2 = {fracturemesh.IdCell0d[q],fracturemesh.IdCell0d[p]};
+        //                         if (insertedcells.count(lato1) > 0 || insertedcells.count(lato2) > 0) {
+        //                             insertedcells.insert(lato1);
+        //                             insertedcells.insert(lato1);
+        //                             fracturemesh.IdVerticesCell1d.push_back(lato);
+        //                             fracturemesh.IdCell1d.push_back(id1d);
+        //                             id1d++;
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //             if (distance(fracturemesh.CoordCell0d[p], sottopoligoni[n][sottopoligoni[n].size()-1]) < 1e-6) {
+        //                 if (distance(fracturemesh.CoordCell0d[q], sottopoligoni[n][0]) < 1e-6) {
+        //                     vector<unsigned int> lato1 = {fracturemesh.IdCell0d[p],fracturemesh.IdCell0d[q]};
+        //                     vector<unsigned int> lato2 = {fracturemesh.IdCell0d[q],fracturemesh.IdCell0d[p]};
+        //                     if (insertedcells.count(lato1) > 0 || insertedcells.count(lato2) > 0) {
+        //                         insertedcells.insert(lato1);
+        //                         insertedcells.insert(lato1);
+        //                         fracturemesh.IdVerticesCell1d.push_back(lato);
+        //                         fracturemesh.IdCell1d.push_back(id1d);
+        //                         id1d++;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // fracturemesh.NumberCell1d = fracturemesh.IdCell1d.size();
+
+        // fracturemesh.IdCell2d.reserve(sottopoligoni.size());
+        // fracturemesh.IdVerticesCell2d.reserve(sottopoligoni.size());
+        // for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
+        //     if (sottopoligoni[n].size() > 2) {
+        //         fracturemesh.IdCell2d.push_back(n);
+        //         vector<unsigned int> verticescell2d;
+        //         for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j) {
+        //             for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
+        //                 if (distance(fracturemesh.CoordCell0d[p], sottopoligoni[n][j]) <= 1e-6) {
+        //                     verticescell2d.push_back(fracturemesh.IdCell0d[p]);
+        //                 }
+        //             }
+        //         }
+        //         fracturemesh.IdVerticesCell2d.push_back(verticescell2d);
+        //         vector<unsigned int> edgescell2d;
+        //         vector<unsigned int> extremesids1;
+        //         vector<unsigned int> extremesids2;
+        //         for (unsigned int p = 0; p < fracturemesh.IdVerticesCell1d.size(); ++p) {
+        //             for (unsigned int j = 0; j < verticescell2d.size()-1; ++j) {
+        //                 extremesids1 = {verticescell2d[j], verticescell2d[j+1]};
+        //                 extremesids2 = {verticescell2d[j+1], verticescell2d[j]};
+        //                 if (extremesids1 == fracturemesh.IdVerticesCell1d[p] ||
+        //                     extremesids2 == fracturemesh.IdVerticesCell1d[p]) {
+        //                     edgescell2d.push_back(fracturemesh.IdCell1d[p]);
+        //                 }
+        //             }
+        //             extremesids1 = {verticescell2d[verticescell2d.size()-1], verticescell2d[0]};
+        //             extremesids2 = {verticescell2d[0], verticescell2d[verticescell2d.size()-1]};
+        //             if (extremesids1 == fracturemesh.IdVerticesCell1d[p] ||
+        //                 extremesids2 == fracturemesh.IdVerticesCell1d[p]) {
+        //                 edgescell2d.push_back(fracturemesh.IdCell1d[p]);
+        //             }
+        //         }
+        //         fracturemesh.IdEdgesCell2d.push_back(edgescell2d);
+        //     }
+        // }
+        // fracturemesh.NumberCell2d = fracturemesh.IdCell2d.size();
