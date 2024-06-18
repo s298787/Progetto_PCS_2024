@@ -660,27 +660,21 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
 
                 // Controlla se la retta della traccia interseca il lato e poi verifica
                 // se l'intersezione è interna alla traccia
-                for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
+                for (size_t j = 0; j < currentpolygon.size(); ++j) {
+                    size_t next_j = (j+1) % currentpolygon.size();
                     if (intersectrettaretta(vert, direction, currentpolygon[j],
-                                            currentpolygon[j+1] - currentpolygon[j], inter)) {
+                                            currentpolygon[next_j] - currentpolygon[j], inter)) {
                         newvertices.push_back(inter);
                         if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
                             distance(traceverts[0], traceverts[1]) < epsilon) {
                             countdoubleintersections++;
                         }
-                    }
+                    }                    
                 }
-                if (intersectrettaretta(vert, direction, currentpolygon[currentpolygon.size()-1],
-                                        currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
-                    newvertices.push_back(inter);
-                    if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
-                        distance(traceverts[0], traceverts[1]) < epsilon) {
-                        countdoubleintersections++;
-                    }
-                }
-                if (countdoubleintersections == 2) {
+                if (countdoubleintersections >= 2) {
                     doubleintersections = true;
                 }
+
 
                 bool raycasting = false;
                 if (!doubleintersections) {
@@ -691,9 +685,10 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                         unsigned int vertexinter = 0;
                         if (!raycasting) {
                             direction = traceverts[1 - k] - vert;
-                            for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
+                            for (size_t j = 0; j < currentpolygon.size(); ++j) {
+                                size_t next_j = (j+1) % currentpolygon.size();
                                 if (intersectrettasemiretta(vert, direction, currentpolygon[j],
-                                                            currentpolygon[j+1] - currentpolygon[j], inter)) {
+                                                            currentpolygon[next_j] - currentpolygon[j], inter)) {
                                     if (distance(inter, vert) < epsilon) {
                                         raycasting = true;
                                         break;
@@ -703,20 +698,9 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                                     }
                                     countraycasting++;
                                 }
-                            }
-                            if (raycasting) {
-                                break;
-                            }
-                            if (intersectrettasemiretta(vert, direction, currentpolygon[currentpolygon.size()-1],
-                                                        currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
-                                if (distance(inter, vert) < epsilon) {
-                                    raycasting = true;
+                                if (raycasting) {
                                     break;
                                 }
-                                if (distance(inter,currentpolygon[currentpolygon.size()])) {
-                                    vertexinter++;
-                                }
-                                countraycasting++;
                             }
                             countraycasting -= vertexinter/2;
                             if (countraycasting == 1) {
@@ -770,40 +754,6 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                     // Memorizza i sottopoligoni in copia
                     copia.push_back(sottopol1);
                     copia.push_back(sottopol2);
-
-                    // Aggiunge il vertice se si trova sulla traccia
-                    // for (size_t tr = 0; tr < id_t; ++tr) {
-                    //     traceverts = traces.TracesExtremesCoord[tr];
-                    //     for (const Vector3d& vertex : newvertices) {
-                    //         if (abs(distance(vertex,traceverts[0])+distance(vertex,traceverts[1])
-                    //                 -distance(traceverts[0], traceverts[1])) <= 1e-6) {
-                    //             for (size_t cp = 0; cp < sottopoligoni.size(); ++cp) {
-                    //                 if (sottopoligoni[cp] != currentpolygon) {
-                    //                     bool vertexadded = false;
-                    //                     for (size_t l = 0; l < sottopoligoni[cp].size()-1; ++l) {
-                    //                         if (abs(distance(vertex, sottopoligoni[cp][l])+distance(vertex, sottopoligoni[cp][l+1])
-                    //                                 -distance(sottopoligoni[cp][l], sottopoligoni[cp][l+1])) >= 1e-6) {
-                    //                             if (!vertexadded) {
-                    //                                 sottopoligoni[cp].push_back(vertex);
-                    //                                 vertexadded = true;
-                    //                             }
-                    //                         }
-                    //                     }
-                    //                     if (abs(distance(vertex, sottopoligoni[cp][sottopoligoni[cp].size()])+distance(vertex, sottopoligoni[cp][0])
-                    //                             -distance(sottopoligoni[cp][sottopoligoni[cp].size()], sottopoligoni[cp][0])) >= 1e-6) {
-                    //                         if (!vertexadded) {
-                    //                             sottopoligoni[cp].push_back(vertex);
-                    //                             vertexadded = true;
-                    //                         }
-                    //                     }
-                    //                     if (vertexadded) {
-                    //                         antiorario(sottopoligoni[cp], fractures.Normals[id]);
-                    //                     }
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    // }
                 }
                 else {
                     copia.push_back(currentpolygon);
@@ -812,20 +762,12 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
             sottopoligoni = move(copia); // Memorizza copia in sottopoligoni
             copia.clear(); // Svuota copia
         }
-        // Elimina gli elementi ripetuti in sottopoligoni
-        // for (size_t t = 0; t < sottopoligoni.size(); ++t) {
-        //     for (size_t n = 0; n < sottopoligoni[t].size()-1; ++n) {
-        //         for (size_t j = n + 1; j < sottopoligoni[t].size(); ++j) {
-        //             if (distance(sottopoligoni[t][n], sottopoligoni[t][j]) < 1e-6) {
-        //                 sottopoligoni[t].erase(sottopoligoni[t].begin()+j);
-        //             }
-        //         }
-        //     }
-        // }
+
 
         // Popola mesh
         chrono::steady_clock::time_point t_begin = chrono::steady_clock::now();
         PolygonalMesh fracturemesh;
+        //Celle 0d
         unsigned int id0d = 0;
         for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
             for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j)  {
@@ -845,26 +787,49 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
         fracturemesh.NumberCell0d = fracturemesh.IdCell0d.size();
 
 
-        unsigned int id1d = 0;
-        unordered_map<pair<unsigned int, unsigned int>, bool, pair_hash> checked_pairs;
+        chrono::steady_clock::time_point t_beginv = chrono::steady_clock::now();
+        // Aggiunge il vertice se si trova sulla traccia
+        for (size_t tr = 0; tr < idtraces.size(); ++tr) {
+            array<Vector3d, 2> traceverts = traces.TracesExtremesCoord[tr];
+            for (const Vector3d& newvertex : fracturemesh.CoordCell0d) {
+                if (distance(newvertex,traceverts[0])+distance(newvertex,traceverts[1])
+                    -distance(traceverts[0], traceverts[1]) < epsilon)  {
+                    for (vector<Vector3d>& currentpolygon : sottopoligoni) {
+                        for (size_t j = 0; j < currentpolygon.size(); ++j) {
+                            size_t next_j = (j+1) % currentpolygon.size();
+                            double l1 = distance(newvertex, currentpolygon[j]);
+                            double l2 = distance(newvertex, currentpolygon[next_j]);
+                            if (l1 > epsilon && l2 > epsilon) {
+                                if (l1 + l2 - distance(currentpolygon[j], currentpolygon[next_j]) < epsilon) {
+                                    currentpolygon.push_back(newvertex);
+                                    antiorario(currentpolygon, fractures.Normals[id]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        chrono::steady_clock::time_point t_endv = chrono::steady_clock::now();
+        double tempoTrascorsovert = chrono::duration_cast<chrono::microseconds>(t_endv-t_beginv).count();
+        cout << "Tempo aggiunta vertice: " << tempoTrascorsovert << "micros. " << endl;
 
-        // Celle 1d
+        // Celle 1d        
+        unsigned int id1d = 0;
+        unordered_set<pair<unsigned int, unsigned int>, pair_hash> checked_pairs;
         for (const auto& poly : sottopoligoni) {
             for (size_t j = 0; j < poly.size(); ++j) {
                 size_t next_j = (j + 1) % poly.size();
-                for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
-                    if (distance(fracturemesh.CoordCell0d[p], poly[j]) < epsilon) {
-                        for (unsigned int q = 0; q < fracturemesh.CoordCell0d.size(); ++ q) {
-                            if (distance(fracturemesh.CoordCell0d[q], poly[next_j]) < epsilon) {
-                                auto lato1 = make_pair(fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]);
-                                auto lato2 = make_pair(fracturemesh.IdCell0d[q], fracturemesh.IdCell0d[p]);
-                                if (checked_pairs.find(lato1) == checked_pairs.end() && checked_pairs.find(lato2) == checked_pairs.end()) {
-                                    fracturemesh.IdVerticesCell1d.push_back({fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]});
-                                    fracturemesh.IdCell1d.push_back(id1d);
-                                    id1d++;
-                                    checked_pairs[lato1] = true;
-                                    checked_pairs[lato2] = true;
-                                }
+                for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size()-1; ++p) {
+                    for (unsigned int q = p+1; q < fracturemesh.CoordCell0d.size(); ++ q) {
+                        if ((distance(fracturemesh.CoordCell0d[p], poly[j]) < epsilon && distance(fracturemesh.CoordCell0d[q], poly[next_j]) < epsilon)
+                            || (distance(fracturemesh.CoordCell0d[q], poly[j]) < epsilon && distance(fracturemesh.CoordCell0d[p], poly[next_j]) < epsilon)) {
+                            auto lato = make_pair(fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]);
+                            if (checked_pairs.find(lato) == checked_pairs.end()) {
+                                fracturemesh.IdVerticesCell1d.push_back({fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]});
+                                fracturemesh.IdCell1d.push_back(id1d);
+                                id1d++;
+                                checked_pairs.insert(lato);
                             }
                         }
                     }
@@ -900,7 +865,7 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
 
                 for (unsigned int p = 0; p < fracturemesh.IdVerticesCell1d.size(); ++p) {
                     for (unsigned int j = 0; j < verticescell2d.size(); ++j) {
-                        unsigned int next_j = (j + 1) % verticescell2d.size(); // next index, wraps around to 0
+                        unsigned int next_j = (j + 1) % verticescell2d.size();
                         vector<unsigned int> extremesids1 = {verticescell2d[j], verticescell2d[next_j]};
                         vector<unsigned int> extremesids2 = {verticescell2d[next_j], verticescell2d[j]};
 
