@@ -55,7 +55,6 @@ TEST(DFNAnalytics, BasicSpheres){
 
 TEST(DFNAnalytics, 3DSpheres){
     // testo la funzione calcspheres su un quadrato
-    //Fractures fractures;
 
     vector<Vector3d> quadrato = {Vector3d(0,1,1),Vector3d(-1,0,0),Vector3d(0,-1,-1),Vector3d(1,0,0)};
     Vector4d sferaquad = Analytics::calcsphere(quadrato);

@@ -69,18 +69,20 @@ int main(int argc, char** argv)
 
 
     // Parte 2
-    // Calcola mesh
+    // Crea la cartella in cui memorizzare la mesh
     string meshfolderout = "Mesh_" + to_string(dfn.FracturesNumber);
     if (mkdir(meshfolderout.c_str(), 0777) == -1) {
         if (errno != EEXIST) {
             cerr << "Could not create directory " << meshfolderout << endl;
         }
     }
+    // Calcola mesh e la scrive
     if (meshcalc(epsilon, traces, dfn, mesh, meshfolderout)) {
         cout << "Folder " << meshfolderout << " written successfully" << endl;
     }
-    unsigned int exportingFracture = 0;
-    //exportMesh(mesh, exportingFracture);
+
+    // unsigned int exportingFracture = 0;
+    // exportMesh(mesh, exportingFracture);
 
     chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
     double tempoTrascorso = chrono::duration_cast<chrono::milliseconds>(t_end-t_begin).count();

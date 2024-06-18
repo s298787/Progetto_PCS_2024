@@ -28,12 +28,12 @@ bool importdfn(const string& filename, Fractures& fractures)
         cerr << "Errore while opening " << filename << endl;
         return false;
     }
-
+    //Legge il numero di fratture nel file
     string header;
     string line;
     stringstream ss;
     getline(file, header);
-    getline(file, line); //Leggiamo il numero di fratture nel file
+    getline(file, line);
     ss << line;
     ss >> fractures.FracturesNumber;
     ss.clear();
@@ -72,7 +72,7 @@ bool importdfn(const string& filename, Fractures& fractures)
             for (unsigned int k = 0; k < numVertices - 1; ++k) {
                 getline(vertex_iss, token, ';'); // Separa le singole coordinate
                 ss << token;
-                ss >> vertex_data[k](i); // Iscatola le coordinate iterando sulle righe di vertex_data
+                ss >> vertex_data[k](i); // Inscatola le coordinate iterando sulle righe di vertex_data
                 ss.clear();
             }
             getline(vertex_iss, token); // Legge l'ultima coordinata che ha separatore \n
@@ -437,6 +437,7 @@ void antiorario(vector<Vector3d>& sottopol, const Vector3d& normal)
         baricentro += stt;
     }
     baricentro /= sottopol.size();
+    // Ordina sottopol in base agli angoli crescenti rispetto al vettore arbitrario di riferimento (1,0,0)
     sort(sottopol.begin(), sottopol.end(), [&baricentro, &normal](const Vector3d&  a,const Vector3d&  b)
          {
         return (calcolangolo(Vector3d(1,0,0),a-baricentro,normal) <
@@ -538,11 +539,11 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
 namespace MeshLibrary {
 using namespace Polygons;
 using namespace Analytics;
-struct pair_hash {
+struct pair_hash { // Mappa delle hash per i pair<unsigned int, unsigned int>
     size_t operator()(const pair<unsigned int, unsigned int>& p) const {
         auto hash1 = hash<unsigned int>{}(p.first);
         auto hash2 = hash<unsigned int>{}(p.second);
-        return hash1 ^ (hash2 << 1);
+        return hash1 ^ (hash2 << 1); // Bitwise XOR tra hash1 e shift a sinistra di hash2
     }
 };
 bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh, const string& meshfolderout)
@@ -610,10 +611,10 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                     doubleintersections = true;
                 }
 
-
                 bool raycasting = false;
                 if (!doubleintersections) {
-                    // Usiamo il ray-casting sugli estremi della traccia
+                    // Usiamo il ray-casting sugli estremi della traccia per controllare
+                    // se almeno uno dei due è interno alla frattura
                     for (size_t k = 0; k < traceverts.size(); ++k) {
                         vert = traceverts[k];
                         unsigned int countraycasting = 0;
@@ -719,7 +720,8 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
         }
         fracturemesh.NumberCell0d = fracturemesh.IdCell0d.size();
 
-        // Aggiunge il vertice se si trova sulla traccia
+        // Controlla tutti i vertici che si trovano sulle tracce
+        // e li aggiunge al sottopoligono se sono su uno dei lati
         for (size_t tr = 0; tr < idtraces.size(); ++tr) {
             array<Vector3d, 2> traceverts = traces.TracesExtremesCoord[tr];
             for (const Vector3d& newvertex : fracturemesh.CoordCell0d) {
@@ -914,6 +916,5 @@ void exportMesh(const vector<MeshLibrary::PolygonalMesh>& mesh, const unsigned i
     }
     string fileName1 = "./ExportMeshEdges.inp";
     exporter.ExportSegments( fileName1, matrix,matrix2);
-
 }
 }
