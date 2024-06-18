@@ -11,6 +11,9 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "UCDUtilities.hpp"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 using namespace std;
 using namespace Eigen;
@@ -128,7 +131,6 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             double d1 = n1.dot(fractures.CoordVertices[id1][0]); // Termine noto relativo al piano id1
             double d2 = n2.dot(fractures.CoordVertices[id2][0]); // Termine noto relativo al piano id2
 
-            // Matrix<double, 2, 3> A;
             Matrix<double, 2, 3> A; // Matrice del sistema lineare di piani
             A.row(0) = n1.transpose();
             A.row(1) = n2.transpose();
@@ -137,17 +139,16 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             // Risolvi il sistema di equazioni lineari per trovare il punto di intersezione
             Vector3d point = A.colPivHouseholderQr().solve(b);
 
-            // vector<Vector3d> intersections;
             for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
-                if (intersectrettaretta(point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i], inter)) {
+                if (intersectrettaretta(epsilon, point, tangent, fractures.CoordVertices[id1][i], fractures.CoordVertices[id1][i+1] - fractures.CoordVertices[id1][i], inter)) {
                     vector<Vector3d> verifica;
                     Vector3d control;
                     for (size_t j = 0; j<fractures.CoordVertices[id2].size()-1;++j) {
-                        if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
+                        if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
                             verifica.push_back(control);
                         }
                     }
-                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
+                    if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
                         verifica.push_back(control);
                     }
                     if (verifica.size()%2 != 0) {
@@ -159,15 +160,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
             }
 
-            if (intersectrettaretta(point, tangent, fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], fractures.CoordVertices[id1][0] - fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], inter)) {
+            if (intersectrettaretta(epsilon, point, tangent, fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], fractures.CoordVertices[id1][0] - fractures.CoordVertices[id1][fractures.CoordVertices[id1].size() - 1], inter)) {
                 vector<Vector3d> verifica;
                 Vector3d control;
                 for (size_t j = 0; j<fractures.CoordVertices[id2].size()-1;++j) {
-                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
+                    if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id2][j],fractures.CoordVertices[id2][j+1]-fractures.CoordVertices[id2][j], control)) {
                         verifica.push_back(control);
                     }
                 }
-                if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
+                if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id2][0]-fractures.CoordVertices[id2][fractures.CoordVertices[id2].size()-1], control)) {
                     verifica.push_back(control);
                 }
                 if (verifica.size()%2 != 0) {
@@ -179,15 +180,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             }
 
             for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
-                if (intersectrettaretta(point, tangent, fractures.CoordVertices[id2][i], fractures.CoordVertices[id2][i+1] - fractures.CoordVertices[id2][i], inter)) {
+                if (intersectrettaretta(epsilon, point, tangent, fractures.CoordVertices[id2][i], fractures.CoordVertices[id2][i+1] - fractures.CoordVertices[id2][i], inter)) {
                     vector<Vector3d> verifica;
                     Vector3d control;
                     for (size_t j = 0; j<fractures.CoordVertices[id1].size()-1;++j) {
-                        if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
+                        if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
                             verifica.push_back(control);
                         }
                     }
-                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1], control)) {
+                    if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id1].size()-1], control)) {
                         verifica.push_back(control);
                     }
                     if (verifica.size()%2 != 0) {
@@ -199,15 +200,15 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
             }
 
-            if (intersectrettaretta(point, tangent, fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], fractures.CoordVertices[id2][0] - fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], inter)) {
+            if (intersectrettaretta(epsilon, point, tangent, fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], fractures.CoordVertices[id2][0] - fractures.CoordVertices[id2][fractures.CoordVertices[id2].size() - 1], inter)) {
                 vector<Vector3d> verifica;
                 Vector3d control;
                 for (size_t j = 0; j<fractures.CoordVertices[id1].size()-1;++j) {
-                    if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
+                    if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id1][j],fractures.CoordVertices[id1][j+1]-fractures.CoordVertices[id1][j], control)) {
                         verifica.push_back(control);
                     }
                 }
-                if (intersectrettasemiretta(inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1], control)) {
+                if (intersectrettasemiretta(epsilon, inter, tangent,fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1],fractures.CoordVertices[id1][0]-fractures.CoordVertices[id1][fractures.CoordVertices[id2].size()-1], control)) {
                     verifica.push_back(control);
                 }
                 if (verifica.size()%2 != 0) {
@@ -362,7 +363,7 @@ Vector3d normal(const vector<Vector3d>& vertex_data)
     n.normalize();
     return n;
 }
-bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
+bool intersectrettaretta(const double& epsilon, const Vector3d& point, const Vector3d& dir,
                          const Vector3d& point1, const Vector3d& dir1, Vector3d& inter)
 {
     Vector3d cross_product = dir.cross(dir1);
@@ -376,8 +377,8 @@ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
     Vector3d pl = point+t*dir;
     Vector3d pl1 = point1+s*dir1;
 
-    if((pl-pl1).norm() < 1e-10) {
-        if (s > -1e-10 && s < 1.0+1e-10) {
+    if((pl-pl1).norm() < epsilon) {
+        if (s > -epsilon && s < 1.0+epsilon) {
             inter = point + t * dir;
             return true;
         }
@@ -391,7 +392,7 @@ bool intersectrettaretta(const Vector3d& point, const Vector3d& dir,
         return false;
     }
 }
-bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
+bool intersectrettasemiretta(const double& epsilon, const Vector3d& point, const Vector3d& dir,
                              const Vector3d& point1, const Vector3d& dir1, Vector3d& control)
 {
     Vector3d cross_product = dir.cross(dir1);
@@ -405,8 +406,8 @@ bool intersectrettasemiretta(const Vector3d& point, const Vector3d& dir,
     Vector3d pl = point+t*dir;
     Vector3d pl1 = point1+s*dir1;
 
-    if((pl-pl1).norm() < 1e-10 && t >= 0) {
-        if (s > -1e-10 && s < 1.0 + 1e-10) {
+    if((pl-pl1).norm() < epsilon && t >= 0) {
+        if (s > -epsilon && s < 1.0 + epsilon) {
             control = point + t * dir;
             return true;
         }
@@ -544,13 +545,8 @@ struct pair_hash {
         return hash1 ^ (hash2 << 1);
     }
 };
-bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh, const string& meshfileout)
+bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh, const string& meshfolderout)
 {
-    ofstream fileout(meshfileout);
-    if (fileout.fail()) {
-        cerr << "Error while creating/opening " << meshfileout << endl;
-        return false;
-    }
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {
         // Crea un array di tracce della singola frattura
         vector<unsigned int> idtraces;
@@ -601,7 +597,7 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                 // se l'intersezione è interna alla traccia
                 for (size_t j = 0; j < currentpolygon.size(); ++j) {
                     size_t next_j = (j+1) % currentpolygon.size();
-                    if (intersectrettaretta(vert, direction, currentpolygon[j],
+                    if (intersectrettaretta(epsilon, vert, direction, currentpolygon[j],
                                             currentpolygon[next_j] - currentpolygon[j], inter)) {
                         newvertices.push_back(inter);
                         if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
@@ -626,7 +622,7 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                             direction = traceverts[1 - k] - vert;
                             for (size_t j = 0; j < currentpolygon.size(); ++j) {
                                 size_t next_j = (j+1) % currentpolygon.size();
-                                if (intersectrettasemiretta(vert, direction, currentpolygon[j],
+                                if (intersectrettasemiretta(epsilon, vert, direction, currentpolygon[j],
                                                             currentpolygon[next_j] - currentpolygon[j], inter)) {
                                     if (distance(inter, vert) < epsilon) {
                                         raycasting = true;
@@ -702,9 +698,7 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
             copia.clear(); // Svuota copia
         }
 
-
         // Popola mesh
-        chrono::steady_clock::time_point t_begin = chrono::steady_clock::now();
         PolygonalMesh fracturemesh;
         //Celle 0d
         unsigned int id0d = 0;
@@ -749,7 +743,6 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
         }
 
         // Celle 1d
-        chrono::steady_clock::time_point t_begin1d = chrono::steady_clock::now();
         unsigned int id1d = 0;
         unordered_set<pair<unsigned int, unsigned int>, pair_hash> checked_pairs;
         for (const auto& poly : sottopoligoni) {
@@ -773,15 +766,9 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
                 }
             }
         }
-
         fracturemesh.NumberCell1d = fracturemesh.IdCell1d.size();
-        chrono::steady_clock::time_point t_end1d = chrono::steady_clock::now();
-        double tempoTrascorso1d = chrono::duration_cast<chrono::microseconds>(t_end1d-t_begin1d).count();
-        cout << "Tempo aggiunta 1d: " << tempoTrascorso1d << "micros. " << endl;
-
 
         // Celle 2d
-        chrono::steady_clock::time_point t_begin2d = chrono::steady_clock::now();
         fracturemesh.IdCell2d.reserve(sottopoligoni.size());
         fracturemesh.IdVerticesCell2d.reserve(sottopoligoni.size());
         for (unsigned int n = 0; n < sottopoligoni.size(); ++n) {
@@ -819,9 +806,22 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
             }
         }
         fracturemesh.NumberCell2d = fracturemesh.IdCell2d.size();
-        chrono::steady_clock::time_point t_end2d = chrono::steady_clock::now();
-        double tempoTrascorso2d = chrono::duration_cast<chrono::microseconds>(t_end2d-t_begin2d).count();
-        cout << "Tempo aggiunta 2d: " << tempoTrascorso2d << "micros. " << endl;
+
+        // Scrive i file di output
+        // Crea la directory della frattura
+        string foldername = meshfolderout + "/Fracture_" + to_string(id);
+        if (mkdir(foldername.c_str(), 0777) == -1) {
+            if (errno != EEXIST) {
+                cerr << "Could not create directory " << foldername << endl;
+            }
+        }
+        // File 0d:
+        string meshfile0 = "/Cell0ds.txt";
+        ofstream fileout(foldername + meshfile0);
+        if (fileout.fail()) {
+            cerr << "Error while creating/opening " << meshfile0 << endl;
+            return false;
+        }
 
         fileout << "Id frattura: " << id << endl;
         fileout << "Numero di tracce: " << idtraces.size() << endl;
@@ -837,69 +837,80 @@ bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& frac
             }
             fileout << endl;
         }
+        fileout.close();
 
-
-        fileout << "Il numero di celle 1d è: " << fracturemesh.NumberCell1d << endl;
-        fileout << "Id Cell1d: Origin; End" << endl;
+        // File 1d:
+        string meshfile1 = "/Cell1ds.txt";
+        ofstream fileout1(foldername + meshfile1);
+        if (fileout1.fail()) {
+            cerr << "Error while creating/opening " << meshfile1 << endl;
+            return false;
+        }
+        fileout1 << "Il numero di celle 1d è: " << fracturemesh.NumberCell1d << endl;
+        fileout1 << "Id Cell1d: Origin; End" << endl;
         for (unsigned int n = 0; n < fracturemesh.NumberCell1d; ++n) {
-            fileout << fracturemesh.IdCell1d[n] << ": ";
+            fileout1 << fracturemesh.IdCell1d[n] << ": ";
             for (unsigned int j = 0; j < 2; ++j) {
-                fileout << fracturemesh.IdVerticesCell1d[n][j] << "; ";
+                fileout1 << fracturemesh.IdVerticesCell1d[n][j] << "; ";
             }
-            fileout << endl;
+            fileout1 << endl;
         }
+        fileout1.close();
 
-        fileout << "Il numero di celle 2d è: " << fracturemesh.NumberCell2d << endl;
-        fileout << "IdCells2d: NumVertices; Vertices; NumEdges; Edges" << endl;
+        // File 2d:
+        string meshfile2 = "/Cell2ds.txt";
+        ofstream fileout2(foldername + meshfile2);
+        if (fileout2.fail()) {
+            cerr << "Error while creating/opening " << meshfile2 << endl;
+            return false;
+        }
+        fileout2 << "Il numero di celle 2d è: " << fracturemesh.NumberCell2d << endl;
+        fileout2 << "IdCells2d: NumVertices; Vertices; NumEdges; Edges" << endl;
         for (unsigned int n = 0; n < fracturemesh.NumberCell2d; ++n) {
-            fileout  << fracturemesh.IdCell2d[n] << ": " ;
-            fileout << fracturemesh.IdVerticesCell2d[n].size() << "; " ;
+            fileout2  << fracturemesh.IdCell2d[n] << ": " ;
+            fileout2 << fracturemesh.IdVerticesCell2d[n].size() << "; " ;
             for (unsigned int j = 0; j < fracturemesh.IdVerticesCell2d[n].size(); ++j) {
-                fileout << fracturemesh.IdVerticesCell2d[n][j] << "; ";
+                fileout2 << fracturemesh.IdVerticesCell2d[n][j] << "; ";
             }
 
-            fileout << fracturemesh.IdEdgesCell2d[n].size() << "; " ;
+            fileout2 << fracturemesh.IdEdgesCell2d[n].size() << "; " ;
             for (unsigned int j = 0; j < fracturemesh.IdEdgesCell2d[n].size(); ++j) {
-                fileout << fracturemesh.IdEdgesCell2d[n][j] << "; ";
+                fileout2 << fracturemesh.IdEdgesCell2d[n][j] << "; ";
             }
-            fileout << endl;
+            fileout2 << endl;
         }
 
-        fileout << endl;
+        fileout2 << endl;
+        fileout2.close();
 
         mesh.push_back(fracturemesh);
-
-        chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
-        double tempoTrascorso = chrono::duration_cast<chrono::microseconds>(t_end-t_begin).count();
-        cout << "Tempo mesh: " << tempoTrascorso << "micros. " << endl;
     }
-    fileout.close();
     return true;
 }
 }
 
 namespace Export{
-void exportMesh(const vector<MeshLibrary::PolygonalMesh>& mesh){
-    unsigned int numCols = mesh[7].NumberCell0d;
+void exportMesh(const vector<MeshLibrary::PolygonalMesh>& mesh, const unsigned int& ef){
+    unsigned int numCols = mesh[ef].NumberCell0d;
 
     // Creo la matrice di dimensioni 3xNumCols
     MatrixXd matrix(3, numCols);
 
     for (unsigned int i = 0; i < numCols; ++i) {
-        matrix.col(i) = mesh[7].CoordCell0d[i];
+        matrix.col(i) = mesh[ef].CoordCell0d[i];
     }
 
     Gedim::UCDUtilities exporter;
     string fileName = "./ExportMeshVertices.inp";
     exporter.ExportPoints( fileName, matrix,{},{});
 
-    unsigned int numCols2 = mesh[7].NumberCell1d;
+    unsigned int numCols2 = mesh[ef].NumberCell1d;
 
     // Crea la matrice di dimensioni 2xNumCols
     MatrixXi matrix2(2, numCols2);
 
     for (unsigned int i = 0; i < numCols2; ++i) {
-        matrix2.col(i) = Vector2i(mesh[7].IdVerticesCell1d[i][0],mesh[7].IdVerticesCell1d[i][1]);
+        matrix2.col(i) = Vector2i(mesh[ef].IdVerticesCell1d[i][0],mesh[ef].IdVerticesCell1d[i][1]);
     }
     string fileName1 = "./ExportMeshEdges.inp";
     exporter.ExportSegments( fileName1, matrix,matrix2);

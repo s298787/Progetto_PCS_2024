@@ -8,6 +8,9 @@
 #include <cmath>
 #include <sstream>
 #include <chrono>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 using namespace std;
 using namespace Eigen;
@@ -67,12 +70,17 @@ int main(int argc, char** argv)
 
     // Parte 2
     // Calcola mesh
-    string meshfileout = "mesh_" + to_string(dfn.FracturesNumber) + ".txt";
-    if (meshcalc(epsilon, traces, dfn, mesh, meshfileout)) {
-        cout << "File " << meshfileout << " written successfully" << endl;
+    string meshfolderout = "Mesh_" + to_string(dfn.FracturesNumber);
+    if (mkdir(meshfolderout.c_str(), 0777) == -1) {
+        if (errno != EEXIST) {
+            cerr << "Could not create directory " << meshfolderout << endl;
+        }
     }
-
-    // exportMesh(mesh);
+    if (meshcalc(epsilon, traces, dfn, mesh, meshfolderout)) {
+        cout << "Folder " << meshfolderout << " written successfully" << endl;
+    }
+    unsigned int exportingFracture = 0;
+    //exportMesh(mesh, exportingFracture);
 
     chrono::steady_clock::time_point t_end = chrono::steady_clock::now();
     double tempoTrascorso = chrono::duration_cast<chrono::milliseconds>(t_end-t_begin).count();

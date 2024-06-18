@@ -87,7 +87,7 @@ TEST(DFNAnalytics, RettaRettaIntersAlBordo){
     Vector3d inter;
 
     //test  quando le rette si intersecano
-    bool int1 = Analytics::intersectrettaretta(Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(0,1,0),Vector3d(1,0,0), inter);
+    bool int1 = Analytics::intersectrettaretta(tol, Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(0,1,0),Vector3d(1,0,0), inter);
     EXPECT_TRUE(int1);//al bordo del segmento
     EXPECT_NEAR(inter.x(),1,tol);
     EXPECT_NEAR(inter.y(),1,tol);
@@ -97,7 +97,7 @@ TEST(DFNAnalytics, RettaRettaIntersAlBordo){
 TEST(DFNAnalytics, RettaRettaInters){
     //test  quando le rette si intersecano
     Vector3d inter;
-    bool int4 = Analytics::intersectrettaretta(Vector3d(0.5,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), inter);
+    bool int4 = Analytics::intersectrettaretta(tol, Vector3d(0.5,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), inter);
     EXPECT_TRUE(int4);
     EXPECT_NEAR(inter.x(),0.5,tol);
     EXPECT_NEAR(inter.y(),2,tol);
@@ -106,7 +106,7 @@ TEST(DFNAnalytics, RettaRettaInters){
 
 TEST(DFNAnalytics, RettaRettaInters3D){
     Vector3d inter;
-    bool int6 = Analytics::intersectrettaretta(Vector3d(0,0,0),Vector3d(1,1,1),Vector3d(1,0,0),Vector3d(0,1,1), inter);
+    bool int6 = Analytics::intersectrettaretta(tol, Vector3d(0,0,0),Vector3d(1,1,1),Vector3d(1,0,0),Vector3d(0,1,1), inter);
     EXPECT_TRUE(int6); // retta 3D
     EXPECT_NEAR(inter.x(),1,tol);
     EXPECT_NEAR(inter.y(),1,tol);
@@ -116,7 +116,7 @@ TEST(DFNAnalytics, RettaRettaInters3D){
 TEST(DFNAnalytics, RettaRettaNoInters){
     //test quando le rette non si intersecano
     Vector3d inter;
-    bool int2 = Analytics::intersectrettaretta(Vector3d(0,0,0),Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(1,0,0), inter);
+    bool int2 = Analytics::intersectrettaretta(tol, Vector3d(0,0,0),Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(1,0,0), inter);
     EXPECT_FALSE(int2);
     EXPECT_EQ(inter, Vector3d(1000,1000,1000));
 }
@@ -124,11 +124,11 @@ TEST(DFNAnalytics, RettaRettaNoInters){
 TEST(DFNAnalytics, RettaRettaIntersFuori){
     //le rette si intersecano al di fuori del segmento
     Vector3d inter;
-    bool int3 = Analytics::intersectrettaretta(Vector3d(2,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), inter);
+    bool int3 = Analytics::intersectrettaretta(tol, Vector3d(2,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), inter);
     EXPECT_FALSE(int3);
     EXPECT_EQ(inter, Vector3d(1000,1000,1000));
 
-    bool int5 = Analytics::intersectrettaretta(Vector3d(0,2,0),Vector3d(1,0,0),Vector3d(0.5,0,0),Vector3d(0,1,0), inter);
+    bool int5 = Analytics::intersectrettaretta(tol, Vector3d(0,2,0),Vector3d(1,0,0),Vector3d(0.5,0,0),Vector3d(0,1,0), inter);
     EXPECT_FALSE(int5);
     EXPECT_EQ(inter, Vector3d(1000,1000,1000));
 }
@@ -138,7 +138,7 @@ TEST(DFNAnalytics, RettaSemirettaIntersAlBordo){
     Vector3d control;
 
     //test  quando le rette si intersecano
-    bool s_int1 = Analytics::intersectrettasemiretta(Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(0,1,0),Vector3d(1,0,0), control);
+    bool s_int1 = Analytics::intersectrettasemiretta(tol, Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(0,1,0),Vector3d(1,0,0), control);
     EXPECT_TRUE(s_int1);//al bordo del segmento
     EXPECT_NEAR(control.x(),1,tol);
     EXPECT_NEAR(control.y(),1,tol);
@@ -148,7 +148,7 @@ TEST(DFNAnalytics, RettaSemirettaIntersAlBordo){
 TEST(DFNAnalytics, RettaSemirettaInters){
     Vector3d control;
     //test  quando le rette si intersecano
-    bool s_int4 = Analytics::intersectrettasemiretta(Vector3d(0.5,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), control);
+    bool s_int4 = Analytics::intersectrettasemiretta(tol, Vector3d(0.5,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), control);
     EXPECT_TRUE(s_int4);
     EXPECT_NEAR(control.x(),0.5,tol);
     EXPECT_NEAR(control.y(),2,tol);
@@ -157,7 +157,7 @@ TEST(DFNAnalytics, RettaSemirettaInters){
 TEST(DFNAnalytics, RettaSemirettaNoInters){
     //test quando le rette non si intersecano
     Vector3d control;
-    bool s_int2 = Analytics::intersectrettasemiretta(Vector3d(0,0,0),Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(1,0,0), control);
+    bool s_int2 = Analytics::intersectrettasemiretta(tol, Vector3d(0,0,0),Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(1,0,0), control);
     EXPECT_FALSE(s_int2);
     EXPECT_EQ(control, Vector3d(1000,1000,1000));
 }
@@ -165,7 +165,7 @@ TEST(DFNAnalytics, RettaSemirettaNoInters){
 TEST(DFNAnalytics, RettaSemirettaIntersFuori){
     //le rette si intersecano al di fuori del segmento
     Vector3d control;
-    bool s_int3 = Analytics::intersectrettasemiretta(Vector3d(2,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), control);
+    bool s_int3 = Analytics::intersectrettasemiretta(tol, Vector3d(2,0,0),Vector3d(0,1,0),Vector3d(0,2,0),Vector3d(1,0,0), control);
     EXPECT_FALSE(s_int3);
     EXPECT_EQ(control, Vector3d(1000,1000,1000));
 }
@@ -173,7 +173,7 @@ TEST(DFNAnalytics, RettaSemirettaIntersFuori){
 TEST(DFNAnalytics, RettaSemirettatNegativo){
     //le rette si intersecano con t negativo
     Vector3d control;
-    bool s_int5 = Analytics::intersectrettasemiretta(Vector3d(0.5,0,0),Vector3d(0,1,0),Vector3d(0,-1,0),Vector3d(1,0,0), control);
+    bool s_int5 = Analytics::intersectrettasemiretta(tol, Vector3d(0.5,0,0),Vector3d(0,1,0),Vector3d(0,-1,0),Vector3d(1,0,0), control);
     EXPECT_FALSE(s_int5);
     EXPECT_EQ(control, Vector3d(1000,1000,1000));
 }
