@@ -51,7 +51,6 @@ int main(int argc, char** argv)
     }
 
     // Calcola tracce
-
     list<vector<unsigned int>> goodcouples = checkspheres(dfn);
     tracesfinder(dfn, goodcouples, traces, epsilon);
 
