@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     // Parte 2
     // Calcola mesh
     string meshfileout = "mesh_" + to_string(dfn.FracturesNumber) + ".txt";
-    if (meshcalc(traces, dfn, mesh, meshfileout)) {
+    if (meshcalc(epsilon, traces, dfn, mesh, meshfileout)) {
         cout << "File " << meshfileout << " written successfully" << endl;
     }
 

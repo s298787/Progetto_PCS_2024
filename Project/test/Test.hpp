@@ -5,14 +5,15 @@
 #include "Utils.hpp"
 #include "Fractures.hpp"
 #include <iostream>
+#include <sstream>
 #include <cmath>
 
 using namespace Eigen;
 using namespace std;
 using namespace Polygons;
 
+double tol = 100*numeric_limits<double>::epsilon();
 
-double tol = epsilon;
 
 TEST(DFNImportTest, CorrectNumberOfFractures) {
     Fractures fractures;

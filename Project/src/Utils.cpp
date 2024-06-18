@@ -231,14 +231,14 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
             // Elimina gli elementi ripetuti in intersections
             for (size_t i = 0; i < intersections.size(); ++i) {
                 for (size_t j = i + 1; j < intersections.size(); ++j) {
-                    if ((intersections[i] - intersections[j]).norm() < 1e-10) {
+                    if ((intersections[i] - intersections[j]).norm() < epsilon) {
                         intersections.erase(intersections.begin()+j);
                     }
                 }
             }
-            if (intersections.size() == 2 && distance(intersections[0], intersections[1]) > 1e-6) {
+            if (intersections.size() == 2 && distance(intersections[0], intersections[1]) > epsilon) {
                 // Popola TracesExtremesCoord
-                traces.TracesExtremesCoord.push_back(intersections);
+                traces.TracesExtremesCoord.push_back({intersections[0], intersections[1]});
                 // Popola TracesFracturesId
                 traces.TracesFracturesId.push_back({id1, id2});
                 // Popola TracesId
@@ -253,12 +253,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 // Controlla tutti i lati di id1 per il primo estremo della traccia
                 for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                     if (abs(distance(intersections[0], fractures.CoordVertices[id1][i]) + distance(intersections[0], fractures.CoordVertices[id1][i+1])
-                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) < 1e-6) {
+                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) < epsilon) {
                         count++;
                     }
                 }                
                 if (abs(distance(intersections[0], fractures.CoordVertices[id1][0]) + distance(intersections[0], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
-                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) < 1e-6) {
+                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) < epsilon) {
                     count++;
                 }
                 if (count >= 1) {
@@ -268,12 +268,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 count = 0;
                 for (size_t i = 0; i < fractures.CoordVertices[id1].size() - 1; ++i) {
                     if (abs(distance(intersections[1], fractures.CoordVertices[id1][i]) + distance(intersections[1], fractures.CoordVertices[id1][i+1])
-                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) < 1e-6) {
+                            - distance(fractures.CoordVertices[id1][i+1], fractures.CoordVertices[id1][i])) < epsilon) {
                         count++;
                     }
                 }
                 if (abs(distance(intersections[1], fractures.CoordVertices[id1][0]) + distance(intersections[1], fractures.CoordVertices[id1][fractures.CoordVertices.size() - 1])
-                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) < 1e-6) {
+                        - distance(fractures.CoordVertices[id1][0], fractures.CoordVertices[id1][fractures.CoordVertices.size()-1])) < epsilon) {
                     count++;
                 }
                 if (count == 0) {
@@ -291,12 +291,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 tips = false;
                 for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
                     if (distance(intersections[0], fractures.CoordVertices[id2][i]) + distance(intersections[0], fractures.CoordVertices[id2][i+1])
-                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) < 1e-6) {
+                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) < epsilon) {
                         count++;
                     }
                 }
                 if (distance(intersections[0], fractures.CoordVertices[id2][0]) + distance(intersections[0], fractures.CoordVertices[id2][fractures.CoordVertices.size() - 1])
-                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) < 1e-6) {
+                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) < epsilon) {
                     count++;
                 }
                 if (count >= 1) {
@@ -304,12 +304,12 @@ void tracesfinder(const Fractures& fractures, const list<vector<unsigned int>>& 
                 }
                 for (size_t i = 0; i < fractures.CoordVertices[id2].size() - 1; ++i) {
                     if (distance(intersections[1], fractures.CoordVertices[id2][i]) + distance(intersections[1], fractures.CoordVertices[id2][i+1])
-                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) <= 1e-6) {
+                        - distance(fractures.CoordVertices[id2][i+1], fractures.CoordVertices[id2][i]) < epsilon) {
                         count++;
                     }
                 }
                 if (distance(intersections[1], fractures.CoordVertices[id2][0]) + distance(intersections[1], fractures.CoordVertices[id2][fractures.CoordVertices.size() - 1])
-                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) < 1e-6) {
+                    - distance(fractures.CoordVertices[id2][0], fractures.CoordVertices[id2][fractures.CoordVertices.size()-1]) < epsilon) {
                     count++;
                 }
                 if (count == 0) {
@@ -490,12 +490,12 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
     //     return len[a] < len[b];
     //      });
 
-    sort(traces.TipsTrue.begin(), traces.TipsTrue.end(), [&len](vector<unsigned int>& a, vector<unsigned int>& b)
+    sort(traces.TipsTrue.begin(), traces.TipsTrue.end(), [&len](array<unsigned int, 2>& a, array<unsigned int, 2>& b)
          {
         return len[a[0]] > len[b[0]];
          });
 
-    sort(traces.TipsFalse.begin(), traces.TipsFalse.end(), [&len](vector<unsigned int>& a, vector<unsigned int>& b)
+    sort(traces.TipsFalse.begin(), traces.TipsFalse.end(), [&len](array<unsigned int, 2>& a, array<unsigned int, 2>& b)
          {
         return len[a[0]] > len[b[0]];
          });
@@ -506,7 +506,7 @@ bool printtips(const string& tipsfileout, Traces& traces, const Fractures& fract
         return false;
     }
     unsigned int id_t;
-    vector<unsigned int> confronto;
+    array<unsigned int, 2> confronto;
     vector<unsigned int> idtraces;
     // Scorre gli id delle fratture
     for (unsigned int id = 0; id < fractures.FracturesNumber; ++id) {        
@@ -582,7 +582,7 @@ struct pair_hash {
         return hash1 ^ (hash2 << 1);
     }
 };
-bool meshcalc(const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh, const string& meshfileout)
+bool meshcalc(const double& epsilon, const Traces& traces, const Fractures& fractures, vector<PolygonalMesh>& mesh, const string& meshfileout)
 {
     ofstream fileout(meshfileout);
     if (fileout.fail()) {
@@ -636,14 +636,14 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
         for (const unsigned int& id_t : idtraces) {
             // vector<vector<Vector3d>> copia; // Array copia di sottopoligoni
             // copia.reserve(2*sottopoligoni.size());
-            vector<Vector3d> traceverts = traces.TracesExtremesCoord[id_t];
+            array<Vector3d, 2> traceverts = traces.TracesExtremesCoord[id_t];
             // Cicla su tutti gli attuali sottopoligoni
             for (const vector<Vector3d>& currentpolygon : sottopoligoni) {
                 Vector3d inter;
 
                 // Salta al prossimo se currentpolygon e la traccia sono troppo lontani
                 Vector4d currentpolygonsphere = calcsphere(currentpolygon);
-                Vector4d tracevertsphere = calcsphere(traceverts);
+                Vector4d tracevertsphere = calcsphere({traceverts[0], traceverts[1]});
                 if (distance({currentpolygonsphere(0), currentpolygonsphere(1), currentpolygonsphere(2)},
                              {tracevertsphere(0), tracevertsphere(1), tracevertsphere(2)}) >
                     currentpolygonsphere(3) + tracevertsphere(3)) {
@@ -665,7 +665,7 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                                             currentpolygon[j+1] - currentpolygon[j], inter)) {
                         newvertices.push_back(inter);
                         if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
-                            distance(traceverts[0], traceverts[1]) <= 1e-6) {
+                            distance(traceverts[0], traceverts[1]) < epsilon) {
                             countdoubleintersections++;
                         }
                     }
@@ -674,7 +674,7 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                                         currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
                     newvertices.push_back(inter);
                     if (distance(inter, traceverts[0]) + distance(inter, traceverts[1]) -
-                        distance(traceverts[0], traceverts[1]) <= 1e-6) {
+                        distance(traceverts[0], traceverts[1]) < epsilon) {
                         countdoubleintersections++;
                     }
                 }
@@ -694,7 +694,7 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                             for (size_t j = 0; j < currentpolygon.size() - 1; ++j) {
                                 if (intersectrettasemiretta(vert, direction, currentpolygon[j],
                                                             currentpolygon[j+1] - currentpolygon[j], inter)) {
-                                    if (distance(inter, vert) < 1e-6) {
+                                    if (distance(inter, vert) < epsilon) {
                                         raycasting = true;
                                         break;
                                     }
@@ -709,7 +709,7 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                             }
                             if (intersectrettasemiretta(vert, direction, currentpolygon[currentpolygon.size()-1],
                                                         currentpolygon[0] - currentpolygon[currentpolygon.size()-1], inter)) {
-                                if (distance(inter, vert) < 1e-6) {
+                                if (distance(inter, vert) < epsilon) {
                                     raycasting = true;
                                     break;
                                 }
@@ -737,7 +737,7 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                 // Elimina gli elementi ripetuti in newvertices
                 for (size_t t = 0; t < newvertices.size()-1; ++t) {
                     for (size_t j = t + 1; j < newvertices.size(); ++j) {
-                        if (distance(newvertices[t], newvertices[j]) < 1e-6) {
+                        if (distance(newvertices[t], newvertices[j]) < epsilon) {
                             newvertices.erase(newvertices.begin()+j);
                         }
                     }
@@ -753,8 +753,8 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
                     sottopol2.push_back(newvertices[0]);
                     sottopol2.push_back(newvertices[1]);
                     for (size_t l = 0; l< currentpolygon.size(); ++l) {
-                        if (distance(newvertices[0], currentpolygon[l]) <= 1e-6 ||
-                            distance(newvertices[1], currentpolygon[l]) <= 1e-6) {
+                        if (distance(newvertices[0], currentpolygon[l]) < epsilon ||
+                            distance(newvertices[1], currentpolygon[l]) < epsilon) {
                             continue;
                         }
                         if(((newvertices[0]-currentpolygon[l]).cross(newvertices[1]-currentpolygon[l])).dot(fractures.Normals[id]) > 0) {
@@ -831,7 +831,7 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
             for (unsigned int j = 0; j < sottopoligoni[n].size(); ++j)  {
                 bool repetition = false;
                 for (size_t k = 0; k < fracturemesh.CoordCell0d.size(); ++k) {
-                    if (distance(sottopoligoni[n][j], fracturemesh.CoordCell0d[k]) < 1e-6) {
+                    if (distance(sottopoligoni[n][j], fracturemesh.CoordCell0d[k]) < epsilon) {
                         repetition = true;
                     }
                 }
@@ -853,9 +853,9 @@ bool meshcalc(const Traces& traces, const Fractures& fractures, vector<Polygonal
             for (size_t j = 0; j < poly.size(); ++j) {
                 size_t next_j = (j + 1) % poly.size();
                 for (unsigned int p = 0; p < fracturemesh.CoordCell0d.size(); ++p) {
-                    if (distance(fracturemesh.CoordCell0d[p], poly[j]) < 1e-6) {
+                    if (distance(fracturemesh.CoordCell0d[p], poly[j]) < epsilon) {
                         for (unsigned int q = 0; q < fracturemesh.CoordCell0d.size(); ++ q) {
-                            if (distance(fracturemesh.CoordCell0d[q], poly[next_j]) < 1e-6) {
+                            if (distance(fracturemesh.CoordCell0d[q], poly[next_j]) < epsilon) {
                                 auto lato1 = make_pair(fracturemesh.IdCell0d[p], fracturemesh.IdCell0d[q]);
                                 auto lato2 = make_pair(fracturemesh.IdCell0d[q], fracturemesh.IdCell0d[p]);
                                 if (checked_pairs.find(lato1) == checked_pairs.end() && checked_pairs.find(lato2) == checked_pairs.end()) {
